@@ -6,7 +6,7 @@
 Cross-platform (Windows, Linux) game hack for **Counter-Strike 2** with GUI and rendering based on game's Panorama UI. Compatible with the latest game update on Steam.
 
 ## What's new
-* 3 April
+* 3 April 2026
     * Change Aim Bot setting
   
 * 13 March 2026
