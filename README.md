@@ -72,7 +72,7 @@ Open **Osiris.sln** in Visual Studio 2022, set build configuration to **Release 
 
 #### Linux
 
-run build.sh
+**run build.sh**
 
 After following these steps you should receive **libOsiris.so** file in **build/Source/** directory.
 
@@ -88,7 +88,7 @@ Counter-Strike 2 blocks LoadLibrary injection method, so you have to use a manua
 
 #### Linux
 
-You can simply run inject.sh which is located in build/Source/inject.sh
+You can simply run **inject.sh** which is located in **build/Source/inject.sh**
 
 However, this injection method might be detected by VAC as gdb is visible under **TracerPid** in `/proc/$(pidof cs2)/status` for the duration of the injection.
 
