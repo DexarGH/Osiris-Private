@@ -5,8 +5,8 @@
 
 struct ParticleData {
     cs2::PanelHandle panelHandle{};
-    float x{0.0f};
-    float y{0.0f};
+    float screenX{0.0f};
+    float screenY{0.0f};
     float speed{0.0f};
     float opacity{1.0f};
     bool active{false};
