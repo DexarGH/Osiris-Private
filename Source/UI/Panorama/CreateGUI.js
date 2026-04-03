@@ -215,6 +215,14 @@ $.Osiris = (function () {
       class: "content-navbar__tabs__center-container",
     });
 
+    var aimBotTabButton = $.CreatePanel('RadioButton', centerContainer, 'aim_bot_button', {
+      group: "CombatNavBar",
+      class: "content-navbar__tabs__btn",
+      onactivate: "$.Osiris.navigateToSubTab('combat', 'aim_bot');"
+    });
+
+    $.CreatePanel('Label', aimBotTabButton, '', { text: "Aim Bot" });
+
     var sniperRiflesTabButton = $.CreatePanel('RadioButton', centerContainer, 'sniper_rifles_button', {
       group: "CombatNavBar",
       class: "content-navbar__tabs__btn",
@@ -420,6 +428,44 @@ u8R"(
     textEntry.SetPanelEvent('onmouseout', function () { if (!textEntry.BHasKeyFocus()) textEntry.style.backgroundColor = 'none'; });
   }
 
+  var createFloatSlider = function (parent, name, section, id, min, max, decimalPlaces) {
+    var container = $.CreatePanel('Panel', parent, '', {
+      class: "SettingsMenuDropdownContainer"
+    });
+
+    $.CreatePanel('Label', container, '', {
+      class: "half-width",
+      text: name
+    });
+
+    var sliderContainer = $.CreatePanel('Panel', container, id, {
+      style: "vertical-align: center; horizontal-align: right; flow-children: right; margin-right: 8px;"
+    });
+
+    var slider = $.CreatePanel('Slider', sliderContainer, '', {
+      class: "HorizontalSlider",
+      style: "width: 200px; vertical-align: center;",
+      direction: "horizontal"
+    });
+
+    slider.SetPanelEvent('onvaluechanged', function () { $.Osiris.sliderUpdated(section, id, slider); });
+    slider.min = min;
+    slider.max = max;
+    slider.increment = 1.0;
+
+    var textEntry = $.CreatePanel('TextEntry', sliderContainer, id + '_text', {
+      maxchars: "5",
+      textmode: "numeric",
+      style: "width: 75px; margin-left: 10px; padding-left: 10px; text-align: center; font-size: 20px; color: #ccccccff; font-weight: bold; font-family: Stratum2, notosans, 'Arial Unicode MS'; border: 2px solid #cccccc15;"
+    });
+
+    textEntry.SetPanelEvent('ontextentrysubmit', function () { $.Osiris.sliderTextEntryUpdated(section, `${id}_text`, textEntry); });
+    textEntry.SetPanelEvent('onfocus', function () { textEntry.style.backgroundColor = 'gradient(linear, 100% 0%, 0% 0%, from(#00000080), color-stop(0, #00000060), to(#00000080))'; });
+    textEntry.SetPanelEvent('onblur', function () { textEntry.style.backgroundColor = 'none'; });
+    textEntry.SetPanelEvent('onmouseover', function () { if (!textEntry.BHasKeyFocus()) textEntry.style.backgroundColor = 'gradient(linear, 100% 0%, 0% 0%, from(#000000ff), color-stop(0, #00000000), to(#00000050));'; });
+    textEntry.SetPanelEvent('onmouseout', function () { if (!textEntry.BHasKeyFocus()) textEntry.style.backgroundColor = 'none'; });
+  }
+
   var createHueSlider = function (parent, name, id, min, max) {
     var container = $.CreatePanel('Panel', parent, '', {
       class: "SettingsMenuDropdownContainer"
@@ -463,11 +509,11 @@ u8R"(
 // split the string literal because MSVC does not support string literals longer than 16k chars - error C2026
 u8R"(
   var combat = createCombatTab();
-  var sniperRiflesTab = createSubTab(combat, 'sniper_rifles');
-  var aimbot = createSection(sniperRiflesTab, 'Aimbot');
-  createYesNoDropDown(aimbot, "Enable Aimbot", 'combat', 'aimbot_enabled');
+  var aimBotTab = createSubTab(combat, 'aim_bot');
+  var aimbot = createSection(aimBotTab, 'Aim Bot');
+  createYesNoDropDown(aimbot, "Enable", 'combat', 'aimbot_enabled');
   separator(aimbot);
-  createDropDown(aimbot, "Activation Key", 'combat', 'aimbot_activation_key', [
+  createDropDown(aimbot, "Bind", 'combat', 'aimbot_bind', [
     'K', 'Left Alt', 'Left Shift', 'C', 'X',
     'MOUSE_0', 'MOUSE_1', 'MOUSE_2', 'MOUSE_3', 'MOUSE_4',
     'Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
@@ -482,25 +528,24 @@ u8R"(
     'NumPad 1', 'NumPad 2', 'NumPad 3', 'NumPad 4', 'NumPad 5', 'NumPad 6', 'NumPad 7', 'NumPad 8', 'NumPad 9', 'NumPad 0', 'NumPad .'
   ]);
   separator(aimbot);
-  createDropDown(aimbot, "Target Selection", 'combat', 'aimbot_target_mode', ['Closest To Crosshair', 'Closest By Distance']);
+  createDropDown(aimbot, "Bind Mode", 'combat', 'aimbot_bind_mode', ['Hold', 'Toggle', 'Always On']);
   separator(aimbot);
-  createDropDown(aimbot, "Aim Point", 'combat', 'aimbot_aim_point', ['Head', 'Body']);
+  createSlider(aimbot, "Smooth", 'combat', 'aimbot_smooth', 0, 20);
   separator(aimbot);
-  createSlider(aimbot, "Max Target NDC Distance x0.01", 'combat', 'aimbot_max_target_ndc_distance', 5, 250);
+  createDropDown(aimbot, "Rotation", 'combat', 'aimbot_rotation', ['Linear', 'Sigmoid']);
   separator(aimbot);
-  createSlider(aimbot, "Base Mouse Gain", 'combat', 'aimbot_base_mouse_gain', 10, 600);
+  createFloatSlider(aimbot, "Multi Point Size", 'combat', 'aimbot_multi_point_size', 0, 100, 2);
   separator(aimbot);
-  createSlider(aimbot, "Additional Mouse Gain", 'combat', 'aimbot_additional_mouse_gain', 0, 800);
+  createYesNoDropDown(aimbot, "Visible Checks", 'combat', 'aimbot_visible_checks');
   separator(aimbot);
-  createSlider(aimbot, "Max Mouse Step", 'combat', 'aimbot_max_mouse_step', 1, 200);
-  separator(aimbot);
-  createSlider(aimbot, "Min Mouse Step x0.01", 'combat', 'aimbot_min_mouse_step', 1, 200);
+  createYesNoDropDown(aimbot, "Flash Checks", 'combat', 'aimbot_flash_checks');
 
+  var sniperRiflesTab = createSubTab(combat, 'sniper_rifles');
   var noScope = createSection(sniperRiflesTab, 'No scope');
   separator(noScope);
   createYesNoDropDown(noScope, "Visualize Inaccuracy When Not Using a Scope", 'combat', 'no_scope_inacc_vis');
 
-  $.Osiris.navigateToSubTab('combat', 'sniper_rifles');
+  $.Osiris.navigateToSubTab('combat', 'aim_bot');
 
   var hud = createTab('hud');
 

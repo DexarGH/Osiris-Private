@@ -8,9 +8,9 @@
 #include <Platform/Macros/FunctionAttributes.h>
 
 #include "Tabs/VisualsTab/IntSlider.h"
-#include "AimbotActivationKeyDropdownSelectionChangeHandler.h"
-#include "AimbotAimPointDropdownSelectionChangeHandler.h"
-#include "AimbotTargetModeDropdownSelectionChangeHandler.h"
+#include "AimbotBindDropdownSelectionChangeHandler.h"
+#include "AimbotBindModeDropdownSelectionChangeHandler.h"
+#include "AimbotRotationDropdownSelectionChangeHandler.h"
 #include "OnOffDropdownSelectionChangeHandler.h"
 
 template <typename HookContext>
@@ -24,23 +24,24 @@ public:
     void init(auto&& guiPanel) const
     {
         initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, aimbot::Enabled>>(guiPanel, "aimbot_enabled");
-        initDropDown<AimbotActivationKeyDropdownSelectionChangeHandler<HookContext>>(guiPanel, "aimbot_activation_key");
-        initDropDown<AimbotTargetModeDropdownSelectionChangeHandler<HookContext>>(guiPanel, "aimbot_target_mode");
-        initDropDown<AimbotAimPointDropdownSelectionChangeHandler<HookContext>>(guiPanel, "aimbot_aim_point");
+        initDropDown<AimbotBindDropdownSelectionChangeHandler<HookContext>>(guiPanel, "aimbot_bind");
+        initDropDown<AimbotBindModeDropdownSelectionChangeHandler<HookContext>>(guiPanel, "aimbot_bind_mode");
+        initDropDown<AimbotRotationDropdownSelectionChangeHandler<HookContext>>(guiPanel, "aimbot_rotation");
+        initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, aimbot::VisibleChecks>>(guiPanel, "aimbot_visible_checks");
+        initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, aimbot::FlashChecks>>(guiPanel, "aimbot_flash_checks");
         initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, no_scope_inaccuracy_vis_vars::Enabled>>(guiPanel, "no_scope_inacc_vis");
     }
 
     void updateFromConfig(auto&& mainMenu) const noexcept
     {
         setDropDownSelectedIndex(mainMenu, "aimbot_enabled", !GET_CONFIG_VAR(aimbot::Enabled));
-        setDropDownSelectedIndex(mainMenu, "aimbot_activation_key", static_cast<int>(static_cast<std::uint8_t>(GET_CONFIG_VAR(aimbot::ActivationKey))));
-        setDropDownSelectedIndex(mainMenu, "aimbot_target_mode", static_cast<int>(GET_CONFIG_VAR(aimbot::TargetMode)));
-        setDropDownSelectedIndex(mainMenu, "aimbot_aim_point", static_cast<int>(GET_CONFIG_VAR(aimbot::TargetAimPoint)));
-        updateSlider<aimbot::MaxTargetNdcDistance>(mainMenu, "aimbot_max_target_ndc_distance");
-        updateSlider<aimbot::BaseMouseGain>(mainMenu, "aimbot_base_mouse_gain");
-        updateSlider<aimbot::AdditionalMouseGain>(mainMenu, "aimbot_additional_mouse_gain");
-        updateSlider<aimbot::MaxMouseStep>(mainMenu, "aimbot_max_mouse_step");
-        updateSlider<aimbot::MinMouseStep>(mainMenu, "aimbot_min_mouse_step");
+        setDropDownSelectedIndex(mainMenu, "aimbot_bind", static_cast<int>(static_cast<std::uint8_t>(GET_CONFIG_VAR(aimbot::Bind))));
+        setDropDownSelectedIndex(mainMenu, "aimbot_bind_mode", static_cast<int>(GET_CONFIG_VAR(aimbot::BindModeType)));
+        updateSlider<aimbot::Smooth>(mainMenu, "aimbot_smooth");
+        setDropDownSelectedIndex(mainMenu, "aimbot_rotation", static_cast<int>(GET_CONFIG_VAR(aimbot::Rotation)));
+        updateSlider<aimbot::MultiPointSize>(mainMenu, "aimbot_multi_point_size");
+        setDropDownSelectedIndex(mainMenu, "aimbot_visible_checks", !GET_CONFIG_VAR(aimbot::VisibleChecks));
+        setDropDownSelectedIndex(mainMenu, "aimbot_flash_checks", !GET_CONFIG_VAR(aimbot::FlashChecks));
         setDropDownSelectedIndex(mainMenu, "no_scope_inacc_vis", !GET_CONFIG_VAR(no_scope_inaccuracy_vis_vars::Enabled));
     }
 

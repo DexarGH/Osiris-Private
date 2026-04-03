@@ -50,6 +50,10 @@ public:
         if (!enabled() || !isActivationBindingPressed())
             return;
 
+        // Проверяем ослепление если включено
+        if (flashChecks() && isPlayerBlinded())
+            return;
+
         if (const auto target = findTargetInNdc(); target.has_value())
             moveMouseTowards(*target);
 #endif
@@ -90,56 +94,72 @@ private:
         return hookContext.config().template getVariable<aimbot::Enabled>();
     }
 
-    [[nodiscard]] aimbot::TargetSelectionMode targetMode() const noexcept
+    [[nodiscard]] std::size_t bindIndex() const noexcept
     {
-        return hookContext.config().template getVariable<aimbot::TargetMode>();
+        return static_cast<std::size_t>(static_cast<std::uint8_t>(hookContext.config().template getVariable<aimbot::Bind>()));
     }
 
-    [[nodiscard]] aimbot::AimPoint aimPoint() const noexcept
+    [[nodiscard]] aimbot::BindMode bindMode() const noexcept
     {
-        return hookContext.config().template getVariable<aimbot::TargetAimPoint>();
+        return hookContext.config().template getVariable<aimbot::BindModeType>();
     }
 
-    [[nodiscard]] std::size_t activationKeyBindingIndex() const noexcept
+    [[nodiscard]] float smooth() const noexcept
     {
-        return static_cast<std::size_t>(static_cast<std::uint8_t>(hookContext.config().template getVariable<aimbot::ActivationKey>()));
+        return static_cast<float>(static_cast<std::uint16_t>(hookContext.config().template getVariable<aimbot::Smooth>()));
     }
 
-    [[nodiscard]] float maxTargetNdcDistance() const noexcept
+    [[nodiscard]] aimbot::RotationType rotationType() const noexcept
     {
-        return aimbot_params::ndcDistanceFromSlider(static_cast<std::uint16_t>(hookContext.config().template getVariable<aimbot::MaxTargetNdcDistance>()));
+        return hookContext.config().template getVariable<aimbot::Rotation>();
     }
 
-    [[nodiscard]] float baseMouseGain() const noexcept
+    [[nodiscard]] float multiPointSize() const noexcept
     {
-        return static_cast<float>(static_cast<std::uint16_t>(hookContext.config().template getVariable<aimbot::BaseMouseGain>()));
+        return aimbot_params::multiPointSizeFromSlider(static_cast<std::uint16_t>(hookContext.config().template getVariable<aimbot::MultiPointSize>()));
     }
 
-    [[nodiscard]] float additionalMouseGain() const noexcept
+    [[nodiscard]] bool visibleChecks() const noexcept
     {
-        return static_cast<float>(static_cast<std::uint16_t>(hookContext.config().template getVariable<aimbot::AdditionalMouseGain>()));
+        return hookContext.config().template getVariable<aimbot::VisibleChecks>();
     }
 
-    [[nodiscard]] float maxMouseStep() const noexcept
+    [[nodiscard]] bool flashChecks() const noexcept
     {
-        return static_cast<float>(static_cast<std::uint16_t>(hookContext.config().template getVariable<aimbot::MaxMouseStep>()));
-    }
-
-    [[nodiscard]] float minMouseStep() const noexcept
-    {
-        return aimbot_params::minMouseStepFromSlider(static_cast<std::uint16_t>(hookContext.config().template getVariable<aimbot::MinMouseStep>()));
+        return hookContext.config().template getVariable<aimbot::FlashChecks>();
     }
 
     [[nodiscard]] bool isActivationBindingPressed() noexcept
     {
-        const auto bindingIndex = activationKeyBindingIndex();
-        if (bindingIndex >= aimbot::kActivationKeyBindings.size())
+        const auto currentBindMode = bindMode();
+        
+        // Always On - всегда активен если включен
+        if (currentBindMode == aimbot::BindMode::AlwaysOn)
+            return true;
+        
+        // Hold или Toggle - нужно проверять нажатие кнопки
+        const auto bindingIdx = bindIndex();
+        if (bindingIdx >= aimbot::kActivationKeyBindings.size())
             return false;
 
-        const auto binding = aimbot::kActivationKeyBindings[bindingIndex];
+        const auto binding = aimbot::kActivationKeyBindings[bindingIdx];
+        bool isPressed = false;
         if (binding.inputType == aimbot::ActivationInputType::Keyboard)
-            return isKeyboardKeyPressed(binding.code);
-        return isMouseButtonPressed(static_cast<std::uint8_t>(binding.code));
+            isPressed = isKeyboardKeyPressed(binding.code);
+        else
+            isPressed = isMouseButtonPressed(static_cast<std::uint8_t>(binding.code));
+        
+        // Toggle mode - переключение состояния
+        if (currentBindMode == aimbot::BindMode::Toggle) {
+            if (isPressed && !state().lastBindWasPressed) {
+                state().toggleState = !state().toggleState;
+            }
+            state().lastBindWasPressed = isPressed;
+            return state().toggleState;
+        }
+        
+        // Hold mode - работает только пока зажата кнопка
+        return isPressed;
     }
 
     [[nodiscard]] bool isKeyboardKeyPressed(std::size_t scancode) noexcept
@@ -174,15 +194,6 @@ private:
 
     [[nodiscard]] std::optional<TargetInNdc> findTargetInNdc() const noexcept
     {
-        const auto useWorldDistanceMetric = targetMode() == aimbot::TargetSelectionMode::ClosestByDistance;
-
-        std::optional<cs2::Vector> localOrigin;
-        if (auto&& localPlayer = hookContext.activeLocalPlayerPawn(); localPlayer) {
-            const auto localPlayerOrigin = localPlayer.absOrigin();
-            if (localPlayerOrigin.hasValue())
-                localOrigin = localPlayerOrigin.value();
-        }
-
         std::optional<TargetInNdc> nearestTarget;
         WorldToClipSpaceConverter<HookContext> worldToClipSpaceConverter{hookContext};
         std::uint16_t inspectedEntities = 0;
@@ -201,9 +212,7 @@ private:
                 return;
             ++validProjectedPoints;
 
-            const auto selectionDistanceSquared = useWorldDistanceMetric && localOrigin.has_value()
-                ? distanceSquared(*localOrigin, projectedAimPoint->worldPosition)
-                : projectedAimPoint->ndcDistanceSquared;
+            const auto selectionDistanceSquared = projectedAimPoint->ndcDistanceSquared;
 
             if (!nearestTarget.has_value() || selectionDistanceSquared < nearestTarget->selectionDistanceSquared) {
                 nearestTarget = TargetInNdc{
@@ -225,7 +234,8 @@ private:
         if (!selectedAimBones.has_value())
             return std::nullopt;
 
-        const auto& aimWorldPosition = aimPoint() == aimbot::AimPoint::Head ? selectedAimBones->head : selectedAimBones->body;
+        // Используем head по умолчанию
+        const auto& aimWorldPosition = selectedAimBones->head;
 
         const auto clip = converter.toClipSpace(aimWorldPosition);
         if (!clip.onScreen())
@@ -235,9 +245,9 @@ private:
         const auto ndcX = clip.x * inverseW;
         const auto ndcY = clip.y * inverseW;
         const auto ndcDistanceSquared = ndcX * ndcX + ndcY * ndcY;
-        const auto maxTargetDistance = maxTargetNdcDistance();
-        const auto maxDistanceSquared = maxTargetDistance * maxTargetDistance;
-        if (ndcDistanceSquared > maxDistanceSquared)
+        
+        // Проверяем видимость если включено
+        if (visibleChecks() && !isTargetVisible(aimWorldPosition))
             return std::nullopt;
 
         return ProjectedAimPoint{
@@ -246,6 +256,22 @@ private:
             .ndcDistanceSquared = ndcDistanceSquared,
             .worldPosition = aimWorldPosition
         };
+    }
+
+    [[nodiscard]] bool isTargetVisible(const cs2::Vector& targetPosition) const noexcept
+    {
+        // Заглушка для проверки видимости
+        // В полной реализации здесь была бы трассировка луча
+        // Для сейчас возвращаем true (цель считается видимой)
+        static_cast<void>(targetPosition);
+        return true;
+    }
+
+    [[nodiscard]] bool isPlayerBlinded() const noexcept
+    {
+        // Заглушка для проверки ослепления
+        // В полной реализации проверялся бы статус флешки у локального игрока
+        return false;
     }
 
     [[nodiscard]] std::optional<SelectedAimBones> selectAimBones(const PlayerPawn<HookContext>& playerPawn) const noexcept
@@ -484,21 +510,28 @@ private:
 
     void moveMouseTowards(const TargetInNdc& target) noexcept
     {
-        const auto maxTargetDistance = maxTargetNdcDistance();
-        const auto maxTargetDistanceSquared = maxTargetDistance * maxTargetDistance;
-        const auto responsiveness = std::clamp(target.ndcDistanceSquared / maxTargetDistanceSquared, 0.2f, 1.0f);
-        const auto mouseGain = baseMouseGain() + additionalMouseGain() * responsiveness;
-
-        auto moveX = target.x * mouseGain;
-        auto moveY = -target.y * mouseGain;
-
-        const auto maxStep = maxMouseStep();
-        moveX = std::clamp(moveX, -maxStep, maxStep);
-        moveY = std::clamp(moveY, -maxStep, maxStep);
-
-        const auto minStep = minMouseStep();
-        if (std::abs(moveX) < minStep && std::abs(moveY) < minStep)
-            return;
+        const auto smoothValue = smooth();
+        const auto rotation = rotationType();
+        
+        // Вычисляем движение
+        float moveX = target.x;
+        float moveY = -target.y;
+        
+        // Применяем сглаживание и тип ротации
+        if (rotation == aimbot::RotationType::Sigmoid) {
+            // Sigmoid функция для плавности
+            const auto distance = std::sqrt(moveX * moveX + moveY * moveY);
+            if (distance > 0.001f) {
+                const auto sigmoidFactor = 1.0f / (1.0f + expf(-smoothValue * (distance - 0.5f)));
+                moveX *= sigmoidFactor;
+                moveY *= sigmoidFactor;
+            }
+        } else {
+            // Linear smooth
+            const auto smoothFactor = smoothValue > 0.0f ? 1.0f / (smoothValue + 1.0f) : 1.0f;
+            moveX *= smoothFactor;
+            moveY *= smoothFactor;
+        }
 
         moveMouseRelative(moveX, moveY);
     }

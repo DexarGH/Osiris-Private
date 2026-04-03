@@ -22,6 +22,9 @@ struct AimbotState {
     std::uint8_t boneArrayPointerFieldRescanCooldown{0};
     int debugLogFd{-1};
     std::uint32_t debugLogCounter{0};
+    // Toggle state for BindMode
+    bool toggleState{false};
+    bool lastBindWasPressed{false};
 #if IS_WIN64()
     decltype(&::ReadProcessMemory) readProcessMemory{nullptr};
 #endif

@@ -31,14 +31,13 @@ private:
 
         configConversion.beginObject(u8"Aimbot");
         configConversion.boolean(u8"Enabled", loadVariable<aimbot::Enabled>(), saveVariable<aimbot::Enabled>());
-        configConversion.uint(u8"ActivationKey", loadVariable<aimbot::ActivationKey>(), saveVariable<aimbot::ActivationKey>());
-        configConversion.uint(u8"TargetSelectionMode", loadVariable<aimbot::TargetMode>(), saveVariable<aimbot::TargetMode>());
-        configConversion.uint(u8"AimPoint", loadVariable<aimbot::TargetAimPoint>(), saveVariable<aimbot::TargetAimPoint>());
-        configConversion.uint(u8"MaxTargetNdcDistance", loadVariable<aimbot::MaxTargetNdcDistance>(), saveVariable<aimbot::MaxTargetNdcDistance>());
-        configConversion.uint(u8"BaseMouseGain", loadVariable<aimbot::BaseMouseGain>(), saveVariable<aimbot::BaseMouseGain>());
-        configConversion.uint(u8"AdditionalMouseGain", loadVariable<aimbot::AdditionalMouseGain>(), saveVariable<aimbot::AdditionalMouseGain>());
-        configConversion.uint(u8"MaxMouseStep", loadVariable<aimbot::MaxMouseStep>(), saveVariable<aimbot::MaxMouseStep>());
-        configConversion.uint(u8"MinMouseStep", loadVariable<aimbot::MinMouseStep>(), saveVariable<aimbot::MinMouseStep>());
+        configConversion.uint(u8"Bind", loadVariable<aimbot::Bind>(), saveVariable<aimbot::Bind>());
+        configConversion.uint(u8"BindMode", loadVariable<aimbot::BindModeType>(), saveVariable<aimbot::BindModeType>());
+        configConversion.uint(u8"Smooth", loadVariable<aimbot::Smooth>(), saveVariable<aimbot::Smooth>());
+        configConversion.uint(u8"Rotation", loadVariable<aimbot::Rotation>(), saveVariable<aimbot::Rotation>());
+        configConversion.uint(u8"MultiPointSize", loadVariable<aimbot::MultiPointSize>(), saveVariable<aimbot::MultiPointSize>());
+        configConversion.boolean(u8"VisibleChecks", loadVariable<aimbot::VisibleChecks>(), saveVariable<aimbot::VisibleChecks>());
+        configConversion.boolean(u8"FlashChecks", loadVariable<aimbot::FlashChecks>(), saveVariable<aimbot::FlashChecks>());
         configConversion.endObject();
 
         configConversion.beginObject(u8"NoScopeInaccuracyVis");

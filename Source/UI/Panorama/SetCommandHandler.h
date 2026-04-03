@@ -36,26 +36,14 @@ struct SetCommandHandler {
 private:
     void handleCombatSection() const noexcept
     {
-        if (const auto feature = parser.getLine('/'); feature == "aimbot_max_target_ndc_distance") {
-            handleIntSlider<aimbot::MaxTargetNdcDistance>("aimbot_max_target_ndc_distance");
-        } else if (feature == "aimbot_max_target_ndc_distance_text") {
-            handleIntSliderTextEntry<aimbot::MaxTargetNdcDistance>("aimbot_max_target_ndc_distance");
-        } else if (feature == "aimbot_base_mouse_gain") {
-            handleIntSlider<aimbot::BaseMouseGain>("aimbot_base_mouse_gain");
-        } else if (feature == "aimbot_base_mouse_gain_text") {
-            handleIntSliderTextEntry<aimbot::BaseMouseGain>("aimbot_base_mouse_gain");
-        } else if (feature == "aimbot_additional_mouse_gain") {
-            handleIntSlider<aimbot::AdditionalMouseGain>("aimbot_additional_mouse_gain");
-        } else if (feature == "aimbot_additional_mouse_gain_text") {
-            handleIntSliderTextEntry<aimbot::AdditionalMouseGain>("aimbot_additional_mouse_gain");
-        } else if (feature == "aimbot_max_mouse_step") {
-            handleIntSlider<aimbot::MaxMouseStep>("aimbot_max_mouse_step");
-        } else if (feature == "aimbot_max_mouse_step_text") {
-            handleIntSliderTextEntry<aimbot::MaxMouseStep>("aimbot_max_mouse_step");
-        } else if (feature == "aimbot_min_mouse_step") {
-            handleIntSlider<aimbot::MinMouseStep>("aimbot_min_mouse_step");
-        } else if (feature == "aimbot_min_mouse_step_text") {
-            handleIntSliderTextEntry<aimbot::MinMouseStep>("aimbot_min_mouse_step");
+        if (const auto feature = parser.getLine('/'); feature == "aimbot_smooth") {
+            handleIntSlider<aimbot::Smooth>("aimbot_smooth");
+        } else if (feature == "aimbot_smooth_text") {
+            handleIntSliderTextEntry<aimbot::Smooth>("aimbot_smooth");
+        } else if (feature == "aimbot_multi_point_size") {
+            handleIntSlider<aimbot::MultiPointSize>("aimbot_multi_point_size");
+        } else if (feature == "aimbot_multi_point_size_text") {
+            handleIntSliderTextEntry<aimbot::MultiPointSize>("aimbot_multi_point_size");
         }
     }
 
