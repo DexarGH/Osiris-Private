@@ -565,8 +565,6 @@ u8R"(
   var fovCircle = createSection(hud, 'FOV Circle');
   createYesNoDropDown(fovCircle, "Enable FOV Circle", 'hud', 'fov_circle_enabled');
   separator(fovCircle);
-  createSlider(fovCircle, "FOV", 'hud', 'fov_circle_fov', 0, 180);
-  separator(fovCircle);
   createSlider(fovCircle, "Thickness", 'hud', 'fov_circle_thickness', 1, 10);
   separator(fovCircle);
   createDropDown(fovCircle, "Color", 'hud', 'fov_circle_color', ['Green', 'Red', 'Blue', 'Yellow', 'Cyan', 'Magenta', 'White']);

@@ -111,7 +111,6 @@ using ConfigVariableTypes = TypeList<
     no_scope_inaccuracy_vis_vars::Enabled,
     BombPlantAlertEnabled,
     fov_circle_vars::Enabled,
-    fov_circle_vars::Fov,
     fov_circle_vars::Thickness,
     fov_circle_vars::Color
 >;

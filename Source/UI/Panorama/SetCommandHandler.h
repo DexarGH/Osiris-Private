@@ -54,51 +54,11 @@ private:
 
     void handleHudSection() const noexcept
     {
-        if (const auto feature = parser.getLine('/'); feature == "fov_circle_fov") {
-            handleSimpleIntSlider<fov_circle_vars::Fov>("fov_circle_fov", 0, 180);
-        } else if (feature == "fov_circle_fov_text") {
-            handleSimpleIntSliderTextEntry<fov_circle_vars::Fov>("fov_circle_fov", 0, 180);
-        } else if (feature == "fov_circle_thickness") {
-            handleSimpleIntSlider<fov_circle_vars::Thickness>("fov_circle_thickness", 1, 10);
+        if (const auto feature = parser.getLine('/'); feature == "fov_circle_thickness") {
+            handleIntSlider<fov_circle_vars::Thickness>("fov_circle_thickness");
         } else if (feature == "fov_circle_thickness_text") {
-            handleSimpleIntSliderTextEntry<fov_circle_vars::Thickness>("fov_circle_thickness", 1, 10);
+            handleIntSliderTextEntry<fov_circle_vars::Thickness>("fov_circle_thickness");
         }
-    }
-
-    template <typename ConfigVariable>
-    void handleSimpleIntSlider(const char* sliderId, auto min, auto max) const noexcept
-    {
-        using ValueType = typename ConfigVariable::ValueType;
-        const auto current = static_cast<ValueType>(GET_CONFIG_VAR(ConfigVariable));
-        ValueType value{};
-        if (!parser.parseInt(value) || value == current || value < static_cast<ValueType>(min) || value > static_cast<ValueType>(max))
-            return;
-
-        hookContext.config().template setVariable<ConfigVariable>(value);
-    }
-
-    template <typename ConfigVariable>
-    void handleSimpleIntSliderTextEntry(const char* sliderId, auto min, auto max) const noexcept
-    {
-        using ValueType = typename ConfigVariable::ValueType;
-        const auto current = static_cast<ValueType>(GET_CONFIG_VAR(ConfigVariable));
-        ValueType value{};
-        if (!parser.parseInt(value) || value < static_cast<ValueType>(min) || value > static_cast<ValueType>(max)) {
-            updateSliderText(sliderId, current);
-            return;
-        }
-
-        if (value == current)
-            return;
-
-        hookContext.config().template setVariable<ConfigVariable>(value);
-    }
-
-    void updateSliderText(const char* sliderId, auto value) const noexcept
-    {
-        // Update slider text entry via GUI command
-        static_cast<void>(sliderId);
-        static_cast<void>(value);
     }
 
     void handleSoundSection() const noexcept

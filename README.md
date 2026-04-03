@@ -8,6 +8,7 @@ Cross-platform (Windows, Linux) game hack for **Counter-Strike 2** with GUI and 
 ## What's new
 * 3 April 2026
     * Change Aim Bot setting
+    * Add FOV Circle
   
 * 13 March 2026
     * Added aimbot feature

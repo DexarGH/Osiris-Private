@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Features/Aimbot/AimbotConfigVariables.h>
 #include <GameClient/Panorama/PanelHandle.h>
 #include <GameClient/Panorama/PanoramaUiEngine.h>
 #include <GameClient/Panorama/PanoramaUiPanel.h>
@@ -21,8 +22,8 @@ public:
             return;
         }
 
-        const auto fovValue = static_cast<float>(GET_CONFIG_VAR(fov_circle_vars::Fov));
-        const auto thickness = static_cast<float>(GET_CONFIG_VAR(fov_circle_vars::Thickness));
+        const auto fovValue = static_cast<float>(static_cast<std::uint16_t>(GET_CONFIG_VAR(aimbot::Fov)));
+        const auto thickness = static_cast<float>(static_cast<std::uint16_t>(GET_CONFIG_VAR(fov_circle_vars::Thickness)));
         const auto colorType = GET_CONFIG_VAR(fov_circle_vars::Color);
 
         auto&& panel = getPanel();
