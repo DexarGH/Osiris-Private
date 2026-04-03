@@ -49,5 +49,12 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     if(CMAKE_STRIP)
       add_custom_command(TARGET Osiris POST_BUILD COMMAND ${CMAKE_STRIP} "$<TARGET_FILE:Osiris>")
     endif()
+
+    # Create inject.sh script
+    add_custom_command(TARGET Osiris POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/inject.sh.in" "$<TARGET_FILE_DIR:Osiris>/inject.sh"
+      COMMAND chmod +x "$<TARGET_FILE_DIR:Osiris>/inject.sh"
+      COMMENT "Creating inject.sh script"
+    )
   endif()
 endif()
