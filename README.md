@@ -10,9 +10,12 @@ Since the developer Osiris is not very active right now, I decided to just add t
 All rights belong to the original Osiris developer (https://github.com/danielkrupinski/osiris). My fork is terrible, and I can't argue with that (don't take this seriously).
 
 ## What's new
+* 4 April 2026
+    * Added World Particle
+    
 * 3 April 2026
     * Change Aim Bot setting
-    * Add FOV Circle
+    * Added FOV Circle
   
 !!!Everything that was done below was NOT DONE BY ME!!!
 
