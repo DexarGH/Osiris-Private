@@ -533,15 +533,16 @@ private:
             // Sigmoid функция для плавности
             const auto distance = std::sqrt(moveX * moveX + moveY * moveY);
             if (distance > 0.001f) {
+                const auto speed = 1000.0f / (smoothValue * 10.0f + 1.0f);
                 const auto sigmoidFactor = 1.0f / (1.0f + expf(-4.0f * (distance / (smoothValue + 1.0f) - 0.5f)));
-                moveX *= sigmoidFactor;
-                moveY *= sigmoidFactor;
+                moveX *= speed * sigmoidFactor;
+                moveY *= speed * sigmoidFactor;
             }
         } else {
-            // Linear smooth: при smooth=0 -> factor=1 (мгновенно), при smooth=20 -> factor~0.05
-            const auto smoothFactor = smoothValue > 0.0f ? 1.0f / (smoothValue * 2.0f + 1.0f) : 1.0f;
-            moveX *= smoothFactor;
-            moveY *= smoothFactor;
+            // Linear smooth: при smooth=0 -> factor=100 (быстро), при smooth=20 -> factor~4.7
+            const auto speedFactor = 100.0f / (smoothValue + 1.0f);
+            moveX *= speedFactor;
+            moveY *= speedFactor;
         }
 
         moveMouseRelative(moveX, moveY);
