@@ -1,0 +1,216 @@
+# Osiris - CS2 Game Hack
+
+## Что это
+Osiris — это кроссплатформенный (Windows, Linux) чит для Counter-Strike 2, основанный на перехвате внутреннего рендеринга игры и манипуляции Panorama UI. Совместим с последним обновлением CS2 в Steam.
+
+**Текущий форк:** https://github.com/DexarGH/Osiris-Private
+**Оригинал:** https://github.com/danielkrupinski/Osiris (Daniel Krupiński)
+
+## Где запускается
+- **ОС:** Linux (Arch Linux), Windows
+- **Игра:** Counter-Strike 2 (Steam)
+- **Инжект:** `build/Source/inject.sh` (Linux) — использует GDB для инжекции `.so` в процесс `cs2`
+
+## Технологии
+- **C++20** (минимум g++ 11 или clang++ 18)
+- **CMake 3.24+**
+- **Без CRT** в Release (нет стандартной библиотеки C++, нет heap аллокаций, нет потоков, нет исключений)
+- **SDL3** — только для перехвата событий (input hook)
+- **VMT Swapping** — перехват виртуальных методов
+- **Pattern Scanning** — поиск адресов в памяти по сигнатурам
+
+## Архитектура проекта
+
+### Точка входа
+`Source/EntryPoints/EntryPoints.h`
+- `SDLHook_PeepEvents` — перехват SDL событий, инициализация
+- `ViewRenderHook_onRenderStart` — вызывается каждый кадр, запускает все фичи
+
+### Основные директории
+
+```
+Source/
+├── CS2/                    # Структуры и константы CS2 (CS2::CViewRender, CS2::Color, и т.д.)
+│   ├── Classes/            # Классы движка (C_CSPlayerPawn, CGameSceneNode, и т.д.)
+│   ├── Constants/          # Константы (имена DLL, entity классы, итемы)
+│   └── Panorama/           # Panorama UI структуры (CUILength, PanelHandle, и т.д.)
+│
+├── Config/                 # Система конфигурации (сохранение/загрузка настроек)
+│   ├── ConfigSchema.h      # Сериализация всех настроек в JSON
+│   ├── ConfigVariable.h    # Макрос CONFIG_VARIABLE для объявления настроек
+│   └── ConfigVariableTypes.h # Список всех типов переменных конфига
+│
+├── Features/               # Функционал чита
+│   ├── Aimbot/             # Аимбот (привязка, smooth, rotation, FOV)
+│   ├── Combat/             # Combat фичи (NoScopeInaccuracyVis)
+│   ├── Hud/                # HUD элементы (BombTimer, FovCircle, и т.д.)
+│   ├── Sound/              # Визуализация звуков
+│   ├── Visuals/            # Визуальные фичи
+│   │   ├── ModelGlow/      # Glow моделей
+│   │   ├── OutlineGlow/    # Outline glow
+│   │   ├── PlayerInfoInWorld/ # ESP информация над игроками
+│   │   ├── ViewmodelMod/   # Модификация viewmodel
+│   │   └── WorldParticle/  # Частицы (Rain/Tail режимы)
+│   └── Common/             # Общие компоненты (InWorldPanels)
+│
+├── GameClient/             # Абстракции над клиентом игры
+│   ├── Entities/           # Классы сущностей (BaseEntity, PlayerPawn, и т.д.)
+│   ├── Panorama/           # Обёртки над Panorama UI
+│   └── WorldToScreen/      # Конвертация мировых координат в экранные
+│
+├── GlobalContext/          # Глобальный контекст (инициализация, хранение состояний)
+│
+├── HookContext/            # Контекст хуков (доступ ко всему из любого места кода)
+│
+├── Hooks/                  # Хуки (VMT Swapper)
+│   ├── ViewRenderHook.h    # Хук OnRenderStart (каждый кадр)
+│   └── PeepEventsHook.h    # Хук SDL событий
+│
+├── MemoryPatterns/         # Паттерны для поиска адресов в памяти
+│   ├── Linux/              # Паттерны для Linux
+│   └── Windows/            # Паттерны для Windows
+│
+├── UI/Panorama/            # GUI (Panorama UI)
+│   ├── CreateGUI.js        # Определение всех вкладок и настроек GUI
+│   ├── CombatTab.h         # Обработчики Combat вкладки
+│   ├── HudTab.h            # Обработчики HUD вкладки
+│   ├── VisualsTab.h        # Обработчики Visuals вкладки
+│   └── Tabs/VisualsTab/    # Обработчики dropdown'ов
+│
+├── Platform/               # Платформо-зависимый код (Linux/Windows)
+├── SDL/                    # SDL функции
+├── Vmt/                    # VMT Swapper
+└── Utils/                  # Утилиты (ColorUtils, Lvalue, StringBuilder, и т.д.)
+```
+
+## Как работает чит
+
+1. **Инжекция** → `inject.sh` вызывает GDB, который загружает `libOsiris.so` в процесс `cs2`
+2. **Инициализация** → `SDLHook_PeepEvents` перехватывает события, запускает `finishInit()`
+3. **Хуки** → `ViewRenderHook` перехватывает `OnRenderStart` (VMT swap)
+4. **Каждый кадр** → `ViewRenderHook_onRenderStart()` вызывает все фичи:
+   - Aimbot
+   - FOV Circle
+   - World Particles
+   - Glow
+   - HUD элементы
+   - GUI
+
+## Как добавить новую фичу
+
+### 1. Создать конфигурационные переменные
+`Source/Features/MyFeature/MyFeatureConfigVariables.h`:
+```cpp
+#pragma once
+#include <Config/ConfigVariable.h>
+#include <Config/RangeConstrainedVariableParams.h>
+
+namespace my_feature_vars {
+    CONFIG_VARIABLE(Enabled, bool, false);
+    // ... другие переменные
+}
+```
+
+### 2. Создать состояние (если нужно)
+`Source/Features/MyFeature/MyFeatureState.h`:
+```cpp
+#pragma once
+#include <CS2/Panorama/PanelHandle.h>
+
+struct MyFeatureState {
+    cs2::PanelHandle panelHandle{};
+};
+```
+
+### 3. Создать основной класс
+`Source/Features/MyFeature/MyFeature.h`:
+```cpp
+#pragma once
+#include "MyFeatureConfigVariables.h"
+#include "MyFeatureState.h"
+
+template <typename HookContext>
+class MyFeature {
+public:
+    explicit MyFeature(HookContext& hookContext) noexcept : hookContext{hookContext} {}
+
+    void update() const {
+        if (!GET_CONFIG_VAR(my_feature_vars::Enabled))
+            return;
+        // Логика фичи
+    }
+
+    void onUnload() const {
+        // Очистка
+    }
+
+private:
+    HookContext& hookContext;
+};
+```
+
+### 4. Добавить в FeaturesStates
+`Source/Features/FeaturesStates.h`:
+```cpp
+#include "MyFeature/MyFeatureState.h"
+struct FeaturesStates {
+    // ...
+    MyFeatureState myFeatureState;
+};
+```
+
+### 5. Добавить в ConfigSchema
+`Source/Config/ConfigSchema.h` — в нужный объект:
+```cpp
+configConversion.boolean(u8"MyFeatureEnabled", loadVariable<my_feature_vars::Enabled>(), saveVariable<my_feature_vars::Enabled>());
+```
+
+### 6. Добавить в ConfigVariableTypes
+`Source/Config/ConfigVariableTypes.h`:
+```cpp
+#include <Features/MyFeature/MyFeatureConfigVariables.h>
+// В список TypeList:
+my_feature_vars::Enabled,
+```
+
+### 7. Добавить include в GlobalContext
+`Source/GlobalContext/GlobalContext.h`:
+```cpp
+#include <Features/MyFeature/MyFeature.h>
+```
+
+### 8. Добавить вызов в EntryPoints
+`Source/EntryPoints/EntryPoints.h`:
+```cpp
+hookContext.make<MyFeature>().update();
+```
+
+### 9. Добавить GUI (если нужно)
+`Source/UI/Panorama/CreateGUI.js`:
+```javascript
+createYesNoDropDown(tab, "Enable MyFeature", 'section', 'my_feature_enabled');
+```
+
+### 10. Добавить обработчики в Tab
+`Source/UI/Panorama/VisualsTab.h` (или HudTab.h / CombatTab.h):
+- Добавить `initDropDown<Handler>(guiPanel, "my_feature_enabled")`
+- Добавить `setDropDownSelectedIndex(mainMenu, "my_feature_enabled", !GET_CONFIG_VAR(...))`
+
+## Полезные макросы
+
+- `GET_CONFIG_VAR(Variable)` — получить значение переменной конфига
+- `SET_CONFIG_VAR(Variable, value)` — установить значение
+- `CONFIG_VARIABLE(Name, Type, Default)` — объявить переменную
+- `CONFIG_VARIABLE_RANGE(Name, Params)` — объявить переменную с диапазоном
+
+## Компиляция
+```bash
+bash build.sh
+```
+Результат: `build/Source/libOsiris.so` + `build/Source/inject.sh`
+
+## Инжекция
+```bash
+cd build/Source
+./inject.sh
+```
