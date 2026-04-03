@@ -40,6 +40,10 @@ private:
             handleIntSlider<aimbot::Smooth>("aimbot_smooth");
         } else if (feature == "aimbot_smooth_text") {
             handleIntSliderTextEntry<aimbot::Smooth>("aimbot_smooth");
+        } else if (feature == "aimbot_fov") {
+            handleIntSlider<aimbot::Fov>("aimbot_fov");
+        } else if (feature == "aimbot_fov_text") {
+            handleIntSliderTextEntry<aimbot::Fov>("aimbot_fov");
         } else if (feature == "aimbot_multi_point_size") {
             handleIntSlider<aimbot::MultiPointSize>("aimbot_multi_point_size");
         } else if (feature == "aimbot_multi_point_size_text") {

@@ -39,6 +39,7 @@ public:
         setDropDownSelectedIndex(mainMenu, "aimbot_bind_mode", static_cast<int>(GET_CONFIG_VAR(aimbot::BindModeType)));
         updateSlider<aimbot::Smooth>(mainMenu, "aimbot_smooth");
         setDropDownSelectedIndex(mainMenu, "aimbot_rotation", static_cast<int>(GET_CONFIG_VAR(aimbot::Rotation)));
+        updateSlider<aimbot::Fov>(mainMenu, "aimbot_fov");
         updateSlider<aimbot::MultiPointSize>(mainMenu, "aimbot_multi_point_size");
         setDropDownSelectedIndex(mainMenu, "aimbot_visible_checks", !GET_CONFIG_VAR(aimbot::VisibleChecks));
         setDropDownSelectedIndex(mainMenu, "aimbot_flash_checks", !GET_CONFIG_VAR(aimbot::FlashChecks));

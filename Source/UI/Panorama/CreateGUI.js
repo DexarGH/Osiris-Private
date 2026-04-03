@@ -534,6 +534,8 @@ u8R"(
   separator(aimbot);
   createDropDown(aimbot, "Rotation", 'combat', 'aimbot_rotation', ['Linear', 'Sigmoid']);
   separator(aimbot);
+  createSlider(aimbot, "FOV", 'combat', 'aimbot_fov', 0, 180);
+  separator(aimbot);
   createFloatSlider(aimbot, "Multi Point Size", 'combat', 'aimbot_multi_point_size', 0, 100, 2);
   separator(aimbot);
   createYesNoDropDown(aimbot, "Visible Checks", 'combat', 'aimbot_visible_checks');

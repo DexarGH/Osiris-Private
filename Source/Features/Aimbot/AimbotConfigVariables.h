@@ -34,6 +34,12 @@ constexpr auto kSmoothParams = RangeConstrainedVariableParams<std::uint16_t>{
     .def = 5
 };
 
+constexpr auto kFovParams = RangeConstrainedVariableParams<std::uint16_t>{
+    .min = 0,
+    .max = 180,
+    .def = 10
+};
+
 constexpr auto kMultiPointSizeParams = RangeConstrainedVariableParams<std::uint16_t>{
     .min = 0,
     .max = 100,
@@ -45,6 +51,7 @@ CONFIG_VARIABLE_RANGE(Bind, kBindIndex);
 CONFIG_VARIABLE(BindModeType, BindMode, BindMode::Hold);
 CONFIG_VARIABLE_RANGE(Smooth, kSmoothParams);
 CONFIG_VARIABLE(Rotation, RotationType, RotationType::Linear);
+CONFIG_VARIABLE_RANGE(Fov, kFovParams);
 CONFIG_VARIABLE_RANGE(MultiPointSize, kMultiPointSizeParams);
 CONFIG_VARIABLE(VisibleChecks, bool, true);
 CONFIG_VARIABLE(FlashChecks, bool, true);

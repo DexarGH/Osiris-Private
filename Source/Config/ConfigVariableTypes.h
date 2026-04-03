@@ -20,6 +20,7 @@ using ConfigVariableTypes = TypeList<
     aimbot::BindModeType,
     aimbot::Smooth,
     aimbot::Rotation,
+    aimbot::Fov,
     aimbot::MultiPointSize,
     aimbot::VisibleChecks,
     aimbot::FlashChecks,

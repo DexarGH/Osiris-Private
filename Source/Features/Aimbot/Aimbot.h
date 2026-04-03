@@ -114,6 +114,11 @@ private:
         return hookContext.config().template getVariable<aimbot::Rotation>();
     }
 
+    [[nodiscard]] float fov() const noexcept
+    {
+        return static_cast<float>(static_cast<std::uint16_t>(hookContext.config().template getVariable<aimbot::Fov>()));
+    }
+
     [[nodiscard]] float multiPointSize() const noexcept
     {
         return aimbot_params::multiPointSizeFromSlider(static_cast<std::uint16_t>(hookContext.config().template getVariable<aimbot::MultiPointSize>()));
@@ -245,6 +250,12 @@ private:
         const auto ndcX = clip.x * inverseW;
         const auto ndcY = clip.y * inverseW;
         const auto ndcDistanceSquared = ndcX * ndcX + ndcY * ndcY;
+        
+        // Проверяем FOV
+        const auto fovRad = fov() * (3.14159265f / 180.0f);
+        const auto fovLimit = std::tan(fovRad * 0.5f);
+        if (ndcDistanceSquared > fovLimit * fovLimit)
+            return std::nullopt;
         
         // Проверяем видимость если включено
         if (visibleChecks() && !isTargetVisible(aimWorldPosition))
@@ -522,13 +533,13 @@ private:
             // Sigmoid функция для плавности
             const auto distance = std::sqrt(moveX * moveX + moveY * moveY);
             if (distance > 0.001f) {
-                const auto sigmoidFactor = 1.0f / (1.0f + expf(-smoothValue * (distance - 0.5f)));
+                const auto sigmoidFactor = 1.0f / (1.0f + expf(-4.0f * (distance / (smoothValue + 1.0f) - 0.5f)));
                 moveX *= sigmoidFactor;
                 moveY *= sigmoidFactor;
             }
         } else {
-            // Linear smooth
-            const auto smoothFactor = smoothValue > 0.0f ? 1.0f / (smoothValue + 1.0f) : 1.0f;
+            // Linear smooth: при smooth=0 -> factor=1 (мгновенно), при smooth=20 -> factor~0.05
+            const auto smoothFactor = smoothValue > 0.0f ? 1.0f / (smoothValue * 2.0f + 1.0f) : 1.0f;
             moveX *= smoothFactor;
             moveY *= smoothFactor;
         }

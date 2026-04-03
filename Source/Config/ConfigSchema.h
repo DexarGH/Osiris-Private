@@ -35,6 +35,7 @@ private:
         configConversion.uint(u8"BindMode", loadVariable<aimbot::BindModeType>(), saveVariable<aimbot::BindModeType>());
         configConversion.uint(u8"Smooth", loadVariable<aimbot::Smooth>(), saveVariable<aimbot::Smooth>());
         configConversion.uint(u8"Rotation", loadVariable<aimbot::Rotation>(), saveVariable<aimbot::Rotation>());
+        configConversion.uint(u8"Fov", loadVariable<aimbot::Fov>(), saveVariable<aimbot::Fov>());
         configConversion.uint(u8"MultiPointSize", loadVariable<aimbot::MultiPointSize>(), saveVariable<aimbot::MultiPointSize>());
         configConversion.boolean(u8"VisibleChecks", loadVariable<aimbot::VisibleChecks>(), saveVariable<aimbot::VisibleChecks>());
         configConversion.boolean(u8"FlashChecks", loadVariable<aimbot::FlashChecks>(), saveVariable<aimbot::FlashChecks>());
