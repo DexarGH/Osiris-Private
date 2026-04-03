@@ -118,7 +118,11 @@ private:
             panel.setWidth(cs2::CUILength::pixels(size));
             panel.setHeight(cs2::CUILength::pixels(size));
             panel.setBorderRadius(cs2::CUILength::pixels(borderRadius));
-            panel.setBackgroundColor(cs2::Color{colorR, colorG, colorB, static_cast<std::uint8_t>(particle.opacity * 255.0f)});
+            panel.setBackgroundColor(cs2::Color{
+                static_cast<std::uint8_t>(colorR),
+                static_cast<std::uint8_t>(colorG),
+                static_cast<std::uint8_t>(colorB),
+                static_cast<std::uint8_t>(particle.opacity * 255.0f)});
 
             if (mode == world_particle_vars::Mode::Rain) {
                 particle.y += particle.speed;

@@ -71,6 +71,22 @@ private:
             handleIntSlider<viewmodel_mod_vars::Fov>("viewmodel_fov");
         } else if (feature == "viewmodel_fov_text") {
             handleIntSliderTextEntry<viewmodel_mod_vars::Fov>("viewmodel_fov");
+        } else if (feature == "world_particle_count") {
+            handleIntSlider<world_particle_vars::Count>("world_particle_count");
+        } else if (feature == "world_particle_count_text") {
+            handleIntSliderTextEntry<world_particle_vars::Count>("world_particle_count");
+        } else if (feature == "world_particle_color_r") {
+            handleIntSlider<world_particle_vars::ColorR>("world_particle_color_r");
+        } else if (feature == "world_particle_color_r_text") {
+            handleIntSliderTextEntry<world_particle_vars::ColorR>("world_particle_color_r");
+        } else if (feature == "world_particle_color_g") {
+            handleIntSlider<world_particle_vars::ColorG>("world_particle_color_g");
+        } else if (feature == "world_particle_color_g_text") {
+            handleIntSliderTextEntry<world_particle_vars::ColorG>("world_particle_color_g");
+        } else if (feature == "world_particle_color_b") {
+            handleIntSlider<world_particle_vars::ColorB>("world_particle_color_b");
+        } else if (feature == "world_particle_color_b_text") {
+            handleIntSliderTextEntry<world_particle_vars::ColorB>("world_particle_color_b");
         }
     }
 

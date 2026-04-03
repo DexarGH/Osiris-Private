@@ -2,6 +2,7 @@
 
 #include <Features/Visuals/ModelGlow/ModelGlowState.h>
 #include <Features/Visuals/PlayerInfoInWorld/PlayerStateIcons/PlayerStateIconsToShow.h>
+#include <Features/Visuals/WorldParticle/WorldParticleConfigVariables.h>
 #include <GameClient/Panorama/PanoramaDropDown.h>
 #include <GameClient/Panorama/Slider.h>
 #include <GameClient/Panorama/TextEntry.h>
@@ -15,6 +16,8 @@
 #include "Tabs/VisualsTab/PlayerModelGlowDropdownSelectionChangeHandler.h"
 #include "Tabs/VisualsTab/PlayerOutlineGlowColorModeDropdownSelectionChangeHandler.h"
 #include "Tabs/VisualsTab/PlayerOutlineGlowDropdownSelectionChangeHandler.h"
+#include "Tabs/VisualsTab/WorldParticleModeDropdownSelectionChangeHandler.h"
+#include "Tabs/VisualsTab/WorldParticleTypeDropdownSelectionChangeHandler.h"
 
 template <typename HookContext>
 class VisualsTab {
@@ -30,6 +33,7 @@ public:
         initModelGlowTab(guiPanel);
         initOutlineGlowTab(guiPanel);
         initViewmodelTab(guiPanel);
+        initWorldParticleTab(guiPanel);
     }
 
     void updateFromConfig(auto&& mainMenu) const noexcept
@@ -38,6 +42,7 @@ public:
         updateOutlineGlowTab(mainMenu);
         updateModelGlowTab(mainMenu);
         updateViewmodelTab(mainMenu);
+        updateWorldParticleTab(mainMenu);
     }
 
 private:
@@ -280,6 +285,24 @@ private:
         if (GET_CONFIG_VAR(model_glow_vars::GlowPlayers))
             return GET_CONFIG_VAR(model_glow_vars::GlowOnlyEnemies) ? 0 : 1;
         return 2;
+    }
+
+    void initWorldParticleTab(auto&& guiPanel) const
+    {
+        initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, world_particle_vars::Enabled>>(guiPanel, "world_particle_enabled");
+        initDropDown<WorldParticleModeDropdownSelectionChangeHandler<HookContext>>(guiPanel, "world_particle_mode");
+        initDropDown<WorldParticleTypeDropdownSelectionChangeHandler<HookContext>>(guiPanel, "world_particle_type");
+    }
+
+    void updateWorldParticleTab(auto&& mainMenu) const noexcept
+    {
+        setDropDownSelectedIndex(mainMenu, "world_particle_enabled", !GET_CONFIG_VAR(world_particle_vars::Enabled));
+        setDropDownSelectedIndex(mainMenu, "world_particle_mode", static_cast<int>(GET_CONFIG_VAR(world_particle_vars::ModeType)));
+        setDropDownSelectedIndex(mainMenu, "world_particle_type", static_cast<int>(GET_CONFIG_VAR(world_particle_vars::Type)));
+        updateSlider<world_particle_vars::Count>(mainMenu, "world_particle_count");
+        updateSlider<world_particle_vars::ColorR>(mainMenu, "world_particle_color_r");
+        updateSlider<world_particle_vars::ColorG>(mainMenu, "world_particle_color_g");
+        updateSlider<world_particle_vars::ColorB>(mainMenu, "world_particle_color_b");
     }
 
     HookContext& hookContext;
