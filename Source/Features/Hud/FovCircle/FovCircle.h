@@ -26,11 +26,27 @@ public:
         const auto thickness = static_cast<float>(static_cast<std::uint16_t>(GET_CONFIG_VAR(fov_circle_vars::Thickness)));
         const auto colorType = GET_CONFIG_VAR(fov_circle_vars::Color);
 
+        // Конвертируем угловой FOV в радиус в пикселях
+        // aimbot использует: fovLimit = tan(FOV/2) в NDC координатах
+        // NDC range [-1, 1] = screen_height пикселей
+        // radius_pixels = tan(FOV/2) * (screen_height / 2)
+        const auto fovRad = fovValue * (3.14159265f / 180.0f);
+        const auto fovLimit = std::tan(fovRad * 0.5f);
+
+        // Используем стандартную высоту экрана (1080p)
+        // NDC Y=1 соответствует верху экрана, Y=-1 — низу
+        const float screenHeight = 1080.0f;
+        const float screenWidth = 1920.0f;
+
+        // Используем минимальную ось для круглой формы
+        const auto minDimension = std::min(screenWidth, screenHeight);
+        const auto radius = fovLimit * (minDimension * 0.5f);
+
         auto&& panel = getPanel();
         panel.setVisible(true);
-        panel.setWidth(cs2::CUILength::pixels(fovValue * 2.0f));
-        panel.setHeight(cs2::CUILength::pixels(fovValue * 2.0f));
-        panel.setBorderRadius(cs2::CUILength::pixels(fovValue));
+        panel.setWidth(cs2::CUILength::pixels(radius * 2.0f));
+        panel.setHeight(cs2::CUILength::pixels(radius * 2.0f));
+        panel.setBorderRadius(cs2::CUILength::pixels(radius));
         panel.setBorder(cs2::CUILength::pixels(thickness), getColor(colorType));
         panel.setBackgroundColor(cs2::Color{0, 0, 0, 0});
         panel.setAlign(PanelAlignmentParams{
