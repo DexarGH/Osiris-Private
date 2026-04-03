@@ -271,18 +271,22 @@ private:
 
     [[nodiscard]] bool isTargetVisible(const cs2::Vector& targetPosition) const noexcept
     {
-        // Заглушка для проверки видимости
-        // В полной реализации здесь была бы трассировка луча
-        // Для сейчас возвращаем true (цель считается видимой)
+        // TODO: Requires engine trace function pattern (IEngineTrace::TraceRay or UTIL_TraceLine)
+        // Need pattern scan for Linux CS2 to find trace function address
+        // Without it, cannot implement proper visibility checks
         static_cast<void>(targetPosition);
         return true;
     }
 
     [[nodiscard]] bool isPlayerBlinded() const noexcept
     {
-        // Заглушка для проверки ослепления
-        // В полной реализации проверялся бы статус флешки у локального игрока
-        return false;
+        // Проверяем ослепление локального игрока
+        auto&& localPlayer = hookContext.activeLocalPlayerPawn();
+        if (!localPlayer)
+            return false;
+        
+        // Если оставшееся время ослепления > 0 — игрок ослеплён
+        return localPlayer.getRemainingFlashBangTime() > 0.0f;
     }
 
     [[nodiscard]] std::optional<SelectedAimBones> selectAimBones(const PlayerPawn<HookContext>& playerPawn) const noexcept
