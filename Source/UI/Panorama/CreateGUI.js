@@ -204,6 +204,14 @@ $.Osiris = (function () {
     });
 
     $.CreatePanel('Label', viewmodelTabButton, '', { text: "Viewmodel" });
+
+    var worldParticleTabButton = $.CreatePanel('RadioButton', centerContainer, 'world_particle_button', {
+        group: "VisualsNavBar",
+        class: "content-navbar__tabs__btn",
+        onactivate: "$.Osiris.navigateToSubTab('visuals', 'world_particle');"
+    });
+
+    $.CreatePanel('Label', worldParticleTabButton, '', { text: "World Particle" });
   };
 
   var createCombatNavbar = function () {
@@ -811,6 +819,22 @@ u8R"(
   createYesNoDropDown(viewmodelFov, "Modify Viewmodel Fov", 'visuals', 'viewmodel_fov_mod');
   separator(viewmodelFov);
   createSlider(viewmodelFov, "Fov", 'visuals', 'viewmodel_fov', 40, 90);
+
+  var worldParticleTab = createSubTab(visuals, 'world_particle');
+  var worldParticle = createSection(worldParticleTab, 'World Particle');
+  createYesNoDropDown(worldParticle, "Enable", 'visuals', 'world_particle_enabled');
+  separator(worldParticle);
+  createSlider(worldParticle, "Count", 'visuals', 'world_particle_count', 10, 1000);
+  separator(worldParticle);
+  createDropDown(worldParticle, "Mode", 'visuals', 'world_particle_mode', ['Rain', 'Tail']);
+  separator(worldParticle);
+  createDropDown(worldParticle, "Particle", 'visuals', 'world_particle_type', ['Star', 'Snow', 'Bloom', 'Dollar']);
+  separator(worldParticle);
+  createSlider(worldParticle, "R", 'visuals', 'world_particle_color_r', 0, 255);
+  separator(worldParticle);
+  createSlider(worldParticle, "G", 'visuals', 'world_particle_color_g', 0, 255);
+  separator(worldParticle);
+  createSlider(worldParticle, "B", 'visuals', 'world_particle_color_b', 0, 255);
 
   $.Osiris.navigateToSubTab('visuals', 'player_info');
 

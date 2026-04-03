@@ -22,6 +22,7 @@
 #include <Features/Sound/SoundFeatures.h>
 #include <Features/Visuals/ModelGlow/Preview/PlayerModelGlowPreview.h>
 #include <Features/Visuals/ViewmodelMod/ViewmodelMod.h>
+#include <Features/Visuals/WorldParticle/WorldParticle.h>
 #include <MemorySearch/PatternNotFoundLogger.h>
 #include <MemoryAllocation/FreeMemoryRegionList.h>
 #include <MemorySearch/PatternFinder.h>

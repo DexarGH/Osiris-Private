@@ -185,6 +185,16 @@ private:
         configConversion.uint(u8"Fov", loadVariable<viewmodel_mod_vars::Fov>(), saveVariable<viewmodel_mod_vars::Fov>());
         configConversion.endObject();
 
+        configConversion.beginObject(u8"WorldParticle");
+        configConversion.boolean(u8"Enabled", loadVariable<world_particle_vars::Enabled>(), saveVariable<world_particle_vars::Enabled>());
+        configConversion.uint(u8"Count", loadVariable<world_particle_vars::Count>(), saveVariable<world_particle_vars::Count>());
+        configConversion.uint(u8"Mode", loadVariable<world_particle_vars::ModeType>(), saveVariable<world_particle_vars::ModeType>());
+        configConversion.uint(u8"Type", loadVariable<world_particle_vars::Type>(), saveVariable<world_particle_vars::Type>());
+        configConversion.uint(u8"ColorR", loadVariable<world_particle_vars::ColorR>(), saveVariable<world_particle_vars::ColorR>());
+        configConversion.uint(u8"ColorG", loadVariable<world_particle_vars::ColorG>(), saveVariable<world_particle_vars::ColorG>());
+        configConversion.uint(u8"ColorB", loadVariable<world_particle_vars::ColorB>(), saveVariable<world_particle_vars::ColorB>());
+        configConversion.endObject();
+
         configConversion.endObject();
     }
 

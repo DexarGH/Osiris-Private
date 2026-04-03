@@ -13,6 +13,7 @@
 #include <Features/Visuals/OutlineGlow/OutlineGlowConfigVariables.h>
 #include <Features/Visuals/PlayerInfoInWorld/PlayerInfoInWorldConfigVariables.h>
 #include <Features/Visuals/ViewmodelMod/ViewmodelModConfigVariables.h>
+#include <Features/Visuals/WorldParticle/WorldParticleConfigVariables.h>
 #include <Utils/TypeList.h>
 
 using ConfigVariableTypes = TypeList<
@@ -112,5 +113,12 @@ using ConfigVariableTypes = TypeList<
     BombPlantAlertEnabled,
     fov_circle_vars::Enabled,
     fov_circle_vars::Thickness,
-    fov_circle_vars::Color
+    fov_circle_vars::Color,
+    world_particle_vars::Enabled,
+    world_particle_vars::Count,
+    world_particle_vars::ModeType,
+    world_particle_vars::Type,
+    world_particle_vars::ColorR,
+    world_particle_vars::ColorG,
+    world_particle_vars::ColorB
 >;
