@@ -17,6 +17,7 @@
 #include <Features/Aimbot/Aimbot.h>
 #include <Features/Combat/SniperRifles/NoScopeInaccuracyVis/NoScopeInaccuracyVis.h>
 #include <Features/Hud/DefusingAlert/DefusingAlert.h>
+#include <Features/Hud/FovCircle/FovCircle.h>
 #include <Features/Hud/KillfeedPreserver/KillfeedPreserver.h>
 #include <Features/Sound/SoundFeatures.h>
 #include <Features/Visuals/ModelGlow/Preview/PlayerModelGlowPreview.h>

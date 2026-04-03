@@ -5,6 +5,7 @@
 #include <Features/Hud/BombPlantAlert/BombPlantAlertConfigVariables.h>
 #include <Features/Hud/BombTimer/BombTimerConfigVariables.h>
 #include <Features/Hud/DefusingAlert/DefusingAlertConfigVariables.h>
+#include <Features/Hud/FovCircle/FovCircleConfigVariables.h>
 #include <Features/Hud/KillfeedPreserver/KillfeedPreserverConfigVariables.h>
 #include <Features/Hud/PostRoundTimer/PostRoundTimerConfigVariables.h>
 #include <Features/Sound/SoundVisualizationConfigVariables.h>
@@ -108,5 +109,9 @@ using ConfigVariableTypes = TypeList<
     viewmodel_mod_vars::ModifyFov,
     viewmodel_mod_vars::Fov,
     no_scope_inaccuracy_vis_vars::Enabled,
-    BombPlantAlertEnabled
+    BombPlantAlertEnabled,
+    fov_circle_vars::Enabled,
+    fov_circle_vars::Fov,
+    fov_circle_vars::Thickness,
+    fov_circle_vars::Color
 >;

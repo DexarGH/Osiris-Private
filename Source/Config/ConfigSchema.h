@@ -72,6 +72,13 @@ private:
         configConversion.boolean(u8"Enabled", loadVariable<BombPlantAlertEnabled>(), saveVariable<BombPlantAlertEnabled>());
         configConversion.endObject();
 
+        configConversion.beginObject(u8"FovCircle");
+        configConversion.boolean(u8"Enabled", loadVariable<fov_circle_vars::Enabled>(), saveVariable<fov_circle_vars::Enabled>());
+        configConversion.uint(u8"Fov", loadVariable<fov_circle_vars::Fov>(), saveVariable<fov_circle_vars::Fov>());
+        configConversion.uint(u8"Thickness", loadVariable<fov_circle_vars::Thickness>(), saveVariable<fov_circle_vars::Thickness>());
+        configConversion.uint(u8"Color", loadVariable<fov_circle_vars::Color>(), saveVariable<fov_circle_vars::Color>());
+        configConversion.endObject();
+
         configConversion.endObject();
     }
 

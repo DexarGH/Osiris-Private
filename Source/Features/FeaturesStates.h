@@ -2,6 +2,7 @@
 
 #include "Aimbot/AimbotState.h"
 #include "Combat/SniperRifles/NoScopeInaccuracyVis/NoScopeInaccuracyVisState.h"
+#include "Hud/FovCircle/FovCircleState.h"
 #include "Hud/HudFeaturesStates.h"
 #include "Visuals/VisualFeaturesStates.h"
 
@@ -10,4 +11,5 @@ struct FeaturesStates {
     HudFeaturesStates hudFeaturesStates;
     VisualFeaturesStates visualFeaturesStates;
     NoScopeInaccuracyVisState noScopeInaccuracyVisState;
+    FovCircleState fovCircleState;
 };

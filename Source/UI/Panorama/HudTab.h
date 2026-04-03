@@ -2,6 +2,7 @@
 
 #include <GameClient/Panorama/PanoramaDropDown.h>
 #include <Platform/Macros/FunctionAttributes.h>
+#include <Features/Hud/FovCircle/FovCircleConfigVariables.h>
 
 template <typename HookContext>
 class HudTab {
@@ -18,6 +19,7 @@ public:
         initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, KillfeedPreserverEnabled>>(guiPanel, "preserve_killfeed");
         initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, PostRoundTimerEnabled>>(guiPanel, "postround_timer");
         initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, BombPlantAlertEnabled>>(guiPanel, "bomb_plant_alert");
+        initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, fov_circle_vars::Enabled>>(guiPanel, "fov_circle_enabled");
     }
 
     void updateFromConfig(auto&& mainMenu) const noexcept
@@ -27,6 +29,8 @@ public:
         setDropDownSelectedIndex(mainMenu, "preserve_killfeed", !GET_CONFIG_VAR(KillfeedPreserverEnabled));
         setDropDownSelectedIndex(mainMenu, "postround_timer", !GET_CONFIG_VAR(PostRoundTimerEnabled));
         setDropDownSelectedIndex(mainMenu, "bomb_plant_alert", !GET_CONFIG_VAR(BombPlantAlertEnabled));
+        setDropDownSelectedIndex(mainMenu, "fov_circle_enabled", !GET_CONFIG_VAR(fov_circle_vars::Enabled));
+        setDropDownSelectedIndex(mainMenu, "fov_circle_color", static_cast<int>(GET_CONFIG_VAR(fov_circle_vars::Color)));
     }
 
 private:
