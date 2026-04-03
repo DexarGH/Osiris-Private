@@ -5,11 +5,17 @@
 
 Cross-platform (Windows, Linux) game hack for **Counter-Strike 2** with GUI and rendering based on game's Panorama UI. Compatible with the latest game update on Steam.
 
+Since the developer Osiris is not very active right now, I decided to just add the features that I miss (and since my knowledge ends with Roblox, I did everything using Qwen Code :\ )
+
+All rights belong to the original Osiris developer (https://github.com/danielkrupinski/osiris). My fork is terrible, and I can't argue with that (don't take this seriously).
+
 ## What's new
 * 3 April 2026
     * Change Aim Bot setting
     * Add FOV Circle
   
+!!!Everything that was done below was NOT DONE BY ME!!!
+
 * 13 March 2026
     * Added aimbot feature
 
@@ -66,13 +72,7 @@ Open **Osiris.sln** in Visual Studio 2022, set build configuration to **Release 
 
 #### Linux
 
-Configure with CMake:
-
-    cmake -DCMAKE_BUILD_TYPE=Release -B build
-
-Build:
-
-    cmake --build build -j $(nproc --all)
+run build.sh
 
 After following these steps you should receive **libOsiris.so** file in **build/Source/** directory.
 
@@ -88,9 +88,7 @@ Counter-Strike 2 blocks LoadLibrary injection method, so you have to use a manua
 
 #### Linux
 
-You can simply run the following script in the directory containing **libOsiris.so**:
-
-    sudo gdb -batch-silent -p $(pidof cs2) -ex "call (void*)dlopen(\"$PWD/libOsiris.so\", 2)"
+You can simply run inject.sh which is located in build/Source/inject.sh
 
 However, this injection method might be detected by VAC as gdb is visible under **TracerPid** in `/proc/$(pidof cs2)/status` for the duration of the injection.
 
