@@ -50,7 +50,7 @@ Source/
 │   │   ├── OutlineGlow/    # Outline glow
 │   │   ├── PlayerInfoInWorld/ # ESP информация над игроками
 │   │   ├── ViewmodelMod/   # Модификация viewmodel
-│   │   └── WorldParticle/  # Частицы (Rain/Tail режимы)
+│   │   └── WorldParticle/  # Частицы (Rain/Tail режимы) — НЕ РАБОТАЕТ
 │   └── Common/             # Общие компоненты (InWorldPanels)
 │
 ├── GameClient/             # Абстракции над клиентом игры
@@ -80,7 +80,7 @@ Source/
 ├── Platform/               # Платформо-зависимый код (Linux/Windows)
 ├── SDL/                    # SDL функции
 ├── Vmt/                    # VMT Swapper
-└── Utils/                  # Утилиты (ColorUtils, Lvalue, StringBuilder, и т.д.)
+└── Utils/                  # Утилиты (ColorUtils, Lvalue, Logger, и т.д.)
 ```
 
 ## Как работает чит
@@ -91,10 +91,105 @@ Source/
 4. **Каждый кадр** → `ViewRenderHook_onRenderStart()` вызывает все фичи:
    - Aimbot
    - FOV Circle
-   - World Particles
+   - World Particles (НЕ РАБОТАЕТ — см. ниже)
    - Glow
    - HUD элементы
    - GUI
+
+## Текущие реализованные фичи (РАБОТАЮТ ✅)
+
+### AimBot (Combat -> Aim Bot)
+- **Enable** (Yes/No)
+- **Bind** — выбор любой кнопки (109 вариантов)
+- **Bind Mode** — Hold/Toggle/Always On
+- **Smooth** (0-20) — плавность (0=быстро, 20=плавно)
+- **Rotation** — Linear/Sigmoid
+- **FOV** (0-180) — угол обзора
+- **Multi Point Size** (0.00-1.00)
+- **Visible Checks** (Yes/No) — заглушка, нужен паттерн TraceRay
+- **Flash Checks** (Yes/No) — РЕАЛИЗОВАНО через `getRemainingFlashBangTime()`
+
+### FOV Circle (HUD -> FOV Circle)
+- **Enable** (Yes/No)
+- **Thickness** (1-10) — толщина рамки
+- **Color** — 7 цветов (Green/Red/Blue/Yellow/Cyan/Magenta/White)
+- Берёт FOV автоматически из AimBot настроек
+- Использует Panorama UI панель с border-radius
+
+### HUD элементы
+- Bomb Timer
+- Bomb Plant Alert
+- Defusing Alert
+- Killfeed Preserver
+- Post-round Timer
+
+### Visuals
+- Model Glow
+- Outline Glow
+- Player Info In World (ESP)
+- Viewmodel Modification
+
+## World Particle — НЕ РАБОТАЕТ ❌
+
+### Что должно работать
+- **Enable** (Yes/No)
+- **Count** (10-1000) — количество частиц
+- **Mode** — Rain/Tail
+- **Particle** — Star/Snow/Bloom/Dollar (разные размеры)
+- **Color R/G/B** (0-255) — кастомный цвет
+
+### Что сейчас происходит (логирование подтверждает)
+✅ `WorldParticle::update()` вызывается каждый кадр
+✅ Контейнер создаётся (`hudReticle` возвращает валидный указатель)
+✅ 800+ панелей частиц создаются (`panelHandle.isValid() == true`)
+✅ Позиции вычисляются правильно (screenX/Y в диапазоне [-1, 1])
+✅ `panel.setVisible(true)` вызывается
+✅ `panel.setBackgroundColor()` — жёлтый цвет {255, 255, 0, 255}
+✅ `panel.setZIndex(10000)` — высокий Z-index
+✅ `panel.setPosition()` — пиксельные координаты
+
+❌ **НО частицы НЕВИДИМЫ на экране**
+
+### Что УЖЕ пробовали
+1. **PanoramaTransformations + translate()** — не работает
+2. **setPosition() напрямую** — не работает
+3. **Прямые дети hudReticle** (без контейнера) — не работает
+4. **Дети отдельного контейнера** с `fitParent()` — не работает
+5. **setAlign(center/center)** — не работает
+
+### Что РАБОТАЕТ (тест)
+✅ Зелёный квадрат 400x400, созданный ПРЯМО в `EntryPoints.h` через тот же `panelFactory().createPanel(hudReticle)` — **ПОЯВИЛСЯ**
+
+### Возможные причины
+- Может быть проблема с дочерними панелями hudReticle (они перезаписываются/скрываются чем-то)
+- Может быть нужна `setParent()` вместо передачи parent в `createPanel()`
+- Может быть нужно вызывать `setStyleFlag()` для видимости
+- Может быть Z-index -1 (отрицательный) скрывает панели
+- Может быть `setVisible(true)` недостаточно — нужен дополнительный метод
+
+### Что попробовать дальше
+1. Создать частицу с теми же параметрами что и рабочий зелёный квадрат (скопировать код точь-в-точь)
+2. Попробовать `panel.setOpacity(1.0f)`
+3. Попробовать `setStyleFlag()` с нужными флагами
+4. Посмотреть как PlayerInfoInWorld создаёт свои панели — он использует тот же подход и РАБОТАЕТ
+5. Возможно проблема в том, что `hudReticle` как parent не подходит для произвольных панелей
+
+## Логирование
+
+### Где логи
+`~/OsirisCS2/logs/osiris_YYYY-MM-DD.log`
+
+### Как работает
+- Авто-создание при первом вызове `LOG_INIT()` в `finishInit()`
+- Лимит 5MB на файл (потом останавливается)
+- Один файл в день с датой в имени
+
+### Использование
+```cpp
+#include <Utils/Logger.h>
+LOG("[Feature] Message: %d, %.2f", intValue, floatValue);
+LOG_INIT();  // В init
+```
 
 ## Как добавить новую фичу
 

@@ -3,9 +3,12 @@
 #include "GlobalContext/GlobalContext.h"
 #include "Hooks/PeepEventsHook.h"
 #include "Utils/ReturnAddress.h"
+#include "Utils/Logger.h"
 
 [[NOINLINE]] void finishInit(auto& hookContext)
 {
+    LOG_INIT();
+    LOG("[Init] finishInit called");
     hookContext.entityClassifier().init(hookContext);
     if (const auto mainMenu{hookContext.patternSearchResults().template get<MainMenuPanelPointer>()}; mainMenu && *mainMenu)
         hookContext.template make<PanoramaGUI>().init(hookContext.template make<PanoramaUiPanel>((*mainMenu)->uiPanel));

@@ -20,6 +20,7 @@ struct WorldParticleState {
     std::array<ParticleData, 1000> particles{};
     cs2::PanelHandle containerPanelHandle{};
     cs2::CUIPanel* rawContainerPanel{nullptr};
-    std::uint16_t spawnIndex{0};
+    std::uint16_t particleCount{0};
     std::uint16_t frameCounter{0};
+    bool testPanelCreated{false};
 };
