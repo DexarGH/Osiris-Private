@@ -75,18 +75,10 @@ private:
             handleIntSlider<world_particle_vars::Count>("world_particle_count");
         } else if (feature == "world_particle_count_text") {
             handleIntSliderTextEntry<world_particle_vars::Count>("world_particle_count");
-        } else if (feature == "world_particle_color_r") {
-            handleIntSlider<world_particle_vars::ColorR>("world_particle_color_r");
-        } else if (feature == "world_particle_color_r_text") {
-            handleIntSliderTextEntry<world_particle_vars::ColorR>("world_particle_color_r");
-        } else if (feature == "world_particle_color_g") {
-            handleIntSlider<world_particle_vars::ColorG>("world_particle_color_g");
-        } else if (feature == "world_particle_color_g_text") {
-            handleIntSliderTextEntry<world_particle_vars::ColorG>("world_particle_color_g");
-        } else if (feature == "world_particle_color_b") {
-            handleIntSlider<world_particle_vars::ColorB>("world_particle_color_b");
-        } else if (feature == "world_particle_color_b_text") {
-            handleIntSliderTextEntry<world_particle_vars::ColorB>("world_particle_color_b");
+        } else if (feature == "world_particle_color_hue") {
+            handleWorldParticleHueSlider("world_particle_color_hue");
+        } else if (feature == "world_particle_color_hue_text") {
+            handleWorldParticleHueSliderTextEntry("world_particle_color_hue");
         }
     }
 
@@ -131,11 +123,62 @@ private:
         return value;
     }
 
+    [[nodiscard]] auto getHueSlider(const char* sliderId) const noexcept
+    {
+        const auto mainMenuPointer = hookContext.patternSearchResults().template get<MainMenuPanelPointer>();
+        auto&& mainMenu = hookContext.template make<ClientPanel>(mainMenuPointer ? *mainMenuPointer : nullptr).uiPanel();
+        return hookContext.template make<HueSlider>(mainMenu.findChildInLayoutFile(sliderId));
+    }
+
     [[nodiscard]] auto getIntSlider(const char* sliderId) const noexcept
     {
         const auto mainMenuPointer = hookContext.patternSearchResults().template get<MainMenuPanelPointer>();
         auto&& mainMenu = hookContext.template make<ClientPanel>(mainMenuPointer ? *mainMenuPointer : nullptr).uiPanel();
         return hookContext.template make<IntSlider>(mainMenu.findChildInLayoutFile(sliderId));
+    }
+
+    void handleWorldParticleHueSlider(const char* sliderId) const noexcept
+    {
+        const auto newVariableValue = handleIntSlider(sliderId, world_particle_vars::ColorHueType::kMin, world_particle_vars::ColorHueType::kMax, static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue)));
+        hookContext.config().template setVariable<world_particle_vars::ColorHue>(world_particle_vars::ColorHueType{newVariableValue});
+
+        auto&& slider = getHueSlider(sliderId);
+        slider.updateTextEntry(color::HueInteger{newVariableValue});
+        slider.updateColorPreview(color::HueInteger{newVariableValue});
+    }
+
+    void handleWorldParticleHueSliderTextEntry(const char* sliderId) const noexcept
+    {
+        const auto newVariableValue = handleIntSliderTextEntry(sliderId, world_particle_vars::ColorHueType::kMin, world_particle_vars::ColorHueType::kMax, static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue)));
+        hookContext.config().template setVariable<world_particle_vars::ColorHue>(world_particle_vars::ColorHueType{newVariableValue});
+
+        auto&& slider = getHueSlider(sliderId);
+        slider.updateTextEntry(color::HueInteger{newVariableValue});
+        slider.updateColorPreview(color::HueInteger{newVariableValue});
+    }
+
+    template <typename ConfigVariable>
+    void handleHueSlider(const char* sliderId) const noexcept
+    {
+        using ValueType = typename ConfigVariable::ValueType::ValueType;
+        const auto newVariableValue = handleIntSlider(sliderId, ConfigVariable::ValueType::kMin, ConfigVariable::ValueType::kMax, static_cast<ValueType>(GET_CONFIG_VAR(ConfigVariable)));
+        hookContext.config().template setVariable<ConfigVariable>(typename ConfigVariable::ValueType{newVariableValue});
+
+        auto&& slider = getHueSlider(sliderId);
+        slider.updateTextEntry(color::HueInteger{newVariableValue});
+        slider.updateColorPreview(color::HueInteger{newVariableValue});
+    }
+
+    template <typename ConfigVariable>
+    void handleHueSliderTextEntry(const char* sliderId) const noexcept
+    {
+        using ValueType = typename ConfigVariable::ValueType::ValueType;
+        const auto newVariableValue = handleIntSliderTextEntry(sliderId, ConfigVariable::ValueType::kMin, ConfigVariable::ValueType::kMax, static_cast<ValueType>(GET_CONFIG_VAR(ConfigVariable)));
+        hookContext.config().template setVariable<ConfigVariable>(typename ConfigVariable::ValueType{newVariableValue});
+
+        auto&& slider = getHueSlider(sliderId);
+        slider.updateTextEntry(color::HueInteger{newVariableValue});
+        slider.updateColorPreview(color::HueInteger{newVariableValue});
     }
 
     StringParser& parser;

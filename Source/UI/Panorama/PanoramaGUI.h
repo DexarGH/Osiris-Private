@@ -1,6 +1,10 @@
 #pragma once
 
+#include <charconv>
+
 #include <CS2/Panorama/CUIPanel.h>
+#include <Features/Visuals/WorldParticle/WorldParticle.h>
+#include <Features/Visuals/WorldParticle/WorldParticleConfigVariables.h>
 #include <GameClient/Entities/PreviewPlayer.h>
 #include <Features/Visuals/ModelGlow/Preview/PlayerModelGlowPreview.h>
 #include <Features/Visuals/ModelGlow/Preview/PlayerModelGlowPreviewColorMode.h>
@@ -14,6 +18,7 @@
 #include <Utils/StringBuilder.h>
 
 #include "PanoramaCommandDispatcher.h"
+#include "Tabs/VisualsTab/HueSlider.h"
 #include "CombatTab.h"
 #include "HudTab.h"
 #include "SoundTab.h"
@@ -171,6 +176,58 @@ public:
         hookContext.config().template setVariable<ConfigVariable>(typename ConfigVariable::ValueType{newVariableValue});
     }
 
+    void onWorldParticleHueSliderValueChanged(float value) const
+    {
+        const auto min = world_particle_vars::ColorHueType::kMin;
+        const auto max = world_particle_vars::ColorHueType::kMax;
+        const auto current = static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue));
+        const auto newValue = handleWorldParticleHueSlider("world_particle_color_hue", value, min, max, current);
+        hookContext.config().template setVariable<world_particle_vars::ColorHue>(world_particle_vars::ColorHueType{newValue});
+
+        // Обновляем цвет всех существующих частиц
+        hookContext.template make<WorldParticle>().updateParticleColors();
+    }
+
+    void onWorldParticleHueSliderTextEntrySubmit(const char* value) const noexcept
+    {
+        const auto min = world_particle_vars::ColorHueType::kMin;
+        const auto max = world_particle_vars::ColorHueType::kMax;
+        const auto current = static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue));
+        const auto newValue = handleWorldParticleHueTextEntry("world_particle_color_hue", value, min, max, current);
+        hookContext.config().template setVariable<world_particle_vars::ColorHue>(world_particle_vars::ColorHueType{newValue});
+    }
+
+    [[nodiscard]] std::uint16_t handleWorldParticleHueSlider(const char* sliderId, float value, std::uint16_t min, std::uint16_t max, std::uint16_t current) const noexcept
+    {
+        auto&& hueSlider = getHueSlider(sliderId);
+        const auto hue = static_cast<std::uint16_t>(value);
+        if (hue == current || hue < min || hue > max)
+            return current;
+        hueSlider.updateTextEntry(color::HueInteger{hue});
+        hueSlider.updateColorPreview(color::HueInteger{hue});
+        return hue;
+    }
+
+    [[nodiscard]] std::uint16_t handleWorldParticleHueTextEntry(const char* sliderId, const char* value, std::uint16_t min, std::uint16_t max, std::uint16_t current) const noexcept
+    {
+        auto&& hueSlider = getHueSlider(sliderId);
+        std::uint16_t hue{};
+        if (std::from_chars(value, value + std::strlen(value), hue).ec != std::errc{} || hue < min || hue > max) {
+            hueSlider.updateTextEntry(color::HueInteger{current});
+            hueSlider.updateColorPreview(color::HueInteger{current});
+            return current;
+        }
+        hueSlider.updateTextEntry(color::HueInteger{hue});
+        hueSlider.updateColorPreview(color::HueInteger{hue});
+        return hue;
+    }
+
+    [[nodiscard]] auto getHueSlider(const char* sliderId) const noexcept
+    {
+        auto&& guiPanel = uiEngine().getPanelFromHandle(state().guiPanelHandle);
+        return hookContext.template make<HueSlider>(guiPanel.findChildInLayoutFile(sliderId));
+    }
+
     [[nodiscard]] decltype(auto) modelGlowPreviewPanel(const char* panelId) const noexcept
     {
         auto&& guiPanel = uiEngine().getPanelFromHandle(state().guiPanelHandle);
@@ -227,12 +284,6 @@ public:
     }
 
 private:
-    [[nodiscard]] decltype(auto) getHueSlider(const char* sliderId) const noexcept
-    {
-        auto&& guiPanel = uiEngine().getPanelFromHandle(state().guiPanelHandle);
-        return hookContext.template make<HueSlider>(guiPanel.findChildInLayoutFile(sliderId));
-    }
-
     [[nodiscard]] color::HueInteger handleHueTextEntry(const char* sliderId, const char* value, color::HueInteger min, color::HueInteger max, color::HueInteger current) const noexcept
     {
         auto&& hueSlider = getHueSlider(sliderId);

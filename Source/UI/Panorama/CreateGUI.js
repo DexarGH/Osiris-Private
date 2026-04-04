@@ -830,11 +830,7 @@ u8R"(
   separator(worldParticle);
   createDropDown(worldParticle, "Particle", 'visuals', 'world_particle_type', ['Star']);
   separator(worldParticle);
-  createSlider(worldParticle, "R", 'visuals', 'world_particle_color_r', 0, 255);
-  separator(worldParticle);
-  createSlider(worldParticle, "G", 'visuals', 'world_particle_color_g', 0, 255);
-  separator(worldParticle);
-  createSlider(worldParticle, "B", 'visuals', 'world_particle_color_b', 0, 255);
+  createHueSlider(worldParticle, "Color", 'world_particle_color_hue', 0, 360);
 
   $.Osiris.navigateToSubTab('visuals', 'player_info');
 

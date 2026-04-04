@@ -118,7 +118,5 @@ using ConfigVariableTypes = TypeList<
     world_particle_vars::Count,
     world_particle_vars::ModeType,
     world_particle_vars::Type,
-    world_particle_vars::ColorR,
-    world_particle_vars::ColorG,
-    world_particle_vars::ColorB
+    world_particle_vars::ColorHue
 >;

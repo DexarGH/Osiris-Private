@@ -30,4 +30,18 @@ public:
         hookContext.template make<DropdownSelectionChangedHandler>().onSelectionChanged(dropdown.getSelectedIndex());
         return true;
     }
+
+    LINUX_ONLY([[gnu::aligned(8)]]) static bool worldParticleHueSliderValueChanged(void* /* thisptr */, cs2::CPanel2D* /* panel */, float value)
+    {
+        HookContext hookContext;
+        hookContext.gui().onWorldParticleHueSliderValueChanged(value);
+        return true;
+    }
+
+    LINUX_ONLY([[gnu::aligned(8)]]) static bool worldParticleHueSliderTextEntrySubmit(void* /* thisptr */, cs2::CPanel2D* /* panel */, const char* value)
+    {
+        HookContext hookContext;
+        hookContext.gui().onWorldParticleHueSliderTextEntrySubmit(value);
+        return true;
+    }
 };

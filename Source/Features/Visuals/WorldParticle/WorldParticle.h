@@ -18,6 +18,7 @@
 #include <GameClient/Panorama/PanoramaUiPanel.h>
 #include <GameClient/WorldToScreen/ViewToProjectionMatrix.h>
 #include <GameClient/WorldToScreen/WorldToClipSpaceConverter.h>
+#include <Utils/ColorUtils.h>
 #include <Utils/Lvalue.h>
 #include "WorldParticleConfigVariables.h"
 #include "WorldParticleState.h"
@@ -200,6 +201,14 @@ private:
 
         auto&& uiPanel = imagePanel.uiPanel();
         uiPanel.setAlign(PanelAlignmentParams{cs2::k_EHorizontalAlignmentCenter, cs2::k_EVerticalAlignmentBottom});
+        
+        const auto particleColor = color::HSBtoRGB(
+            color::HueInteger{static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue))},
+            color::Saturation{0.7f},
+            color::Brightness{0.9f}
+        );
+        
+        uiPanel.setWashColor(particleColor);
         uiPanel.setImageShadow(PanelShadowParams{
             .horizontalOffset{cs2::CUILength::pixels(0)},
             .verticalOffset{cs2::CUILength::pixels(0)},
@@ -209,6 +218,48 @@ private:
         });
 
         particle.panelHandle = panel.getHandle();
+    }
+
+    void updateParticleColors() const
+    {
+        auto& state = getState();
+        const auto particleColor = color::HSBtoRGB(
+            color::HueInteger{static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue))},
+            color::Saturation{0.7f},
+            color::Brightness{0.9f}
+        );
+
+        for (std::uint16_t i = 0; i < state.particleCount; ++i) {
+            auto& particle = state.particles[i];
+            if (particle.panelHandle.isValid() && particle.active) {
+                auto&& panel = hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle);
+                panel.setWashColor(particleColor);
+            }
+        }
+    }
+
+private:
+    void hideAll() const
+    {
+        auto& state = getState();
+        for (auto& particle : state.particles) {
+            if (particle.panelHandle.isValid())
+                hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle).setVisible(false);
+        }
+    }
+
+    void ensureContainer() const
+    {
+        auto& state = getState();
+        if (!state.containerValid) {
+            auto&& container = hookContext.panelFactory().createPanel(hookContext.hud().getHudReticle()).uiPanel();
+            if (container) {
+                container.fitParent();
+                state.containerPanelHandle = container.getHandle();
+                state.containerRaw = static_cast<cs2::CUIPanel*>(container);
+                state.containerValid = true;
+            }
+        }
     }
 
     void updateActiveParticles() const

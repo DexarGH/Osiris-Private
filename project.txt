@@ -50,7 +50,7 @@ Source/
 │   │   ├── OutlineGlow/    # Outline glow
 │   │   ├── PlayerInfoInWorld/ # ESP информация над игроками
 │   │   ├── ViewmodelMod/   # Модификация viewmodel
-│   │   └── WorldParticle/  # Частицы (Rain/Tail режимы) — НЕ РАБОТАЕТ
+│   │   └── WorldParticle/  # Частицы (Rain/Tail режимы)
 │   └── Common/             # Общие компоненты (InWorldPanels)
 │
 ├── GameClient/             # Абстракции над клиентом игры
@@ -91,7 +91,7 @@ Source/
 4. **Каждый кадр** → `ViewRenderHook_onRenderStart()` вызывает все фичи:
    - Aimbot
    - FOV Circle
-   - World Particles (НЕ РАБОТАЕТ — см. ниже)
+   - World Particles (РАБОТАЕТ — Tail режим, см. ниже)
    - Glow
    - HUD элементы
    - GUI
@@ -129,50 +129,32 @@ Source/
 - Player Info In World (ESP)
 - Viewmodel Modification
 
-## World Particle — НЕ РАБОТАЕТ ❌
+## World Particle
 
-### Что должно работать
+### Что работает
 - **Enable** (Yes/No)
-- **Count** (10-1000) — количество частиц
-- **Mode** — Rain/Tail
-- **Particle** — Star/Snow/Bloom/Dollar (разные размеры)
-- **Color R/G/B** (0-255) — кастомный цвет
+- **Count** (1-500) — количество частиц
+- **Mode** — Tail (работает), Rain (НЕ РЕАЛИЗОВАН — скрывает частицы)
+- **Particle** — только Star (SVG: `star.svg`), остальные заготовлены но не используются
+- **Color** — Hue слайдер (0-360°) с квадратиком превью цвета
 
-### Что сейчас происходит (логирование подтверждает)
-✅ `WorldParticle::update()` вызывается каждый кадр
-✅ Контейнер создаётся (`hudReticle` возвращает валидный указатель)
-✅ 800+ панелей частиц создаются (`panelHandle.isValid() == true`)
-✅ Позиции вычисляются правильно (screenX/Y в диапазоне [-1, 1])
-✅ `panel.setVisible(true)` вызывается
-✅ `panel.setBackgroundColor()` — жёлтый цвет {255, 255, 0, 255}
-✅ `panel.setZIndex(10000)` — высокий Z-index
-✅ `panel.setPosition()` — пиксельные координаты
+### Текущая проблема
+- **Цвет существующих частиц не обновляется при смене Hue**: новые частицы тоже спавнятся с старым цветом
+- Нужно: при изменении Hue слайдера вызвать `updateParticleColors()` для всех активных частиц
+- Метод `updateParticleColors()` уже есть в коде, но не вызывается из GUI handler'а
 
-❌ **НО частицы НЕВИДИМЫ на экране**
-
-### Что УЖЕ пробовали
-1. **PanoramaTransformations + translate()** — не работает
-2. **setPosition() напрямую** — не работает
-3. **Прямые дети hudReticle** (без контейнера) — не работает
-4. **Дети отдельного контейнера** с `fitParent()` — не работает
-5. **setAlign(center/center)** — не работает
-
-### Что РАБОТАЕТ (тест)
-✅ Зелёный квадрат 400x400, созданный ПРЯМО в `EntryPoints.h` через тот же `panelFactory().createPanel(hudReticle)` — **ПОЯВИЛСЯ**
-
-### Возможные причины
-- Может быть проблема с дочерними панелями hudReticle (они перезаписываются/скрываются чем-то)
-- Может быть нужна `setParent()` вместо передачи parent в `createPanel()`
-- Может быть нужно вызывать `setStyleFlag()` для видимости
-- Может быть Z-index -1 (отрицательный) скрывает панели
-- Может быть `setVisible(true)` недостаточно — нужен дополнительный метод
+### Архитектура
+- SVG: `s2r://panorama/images/icons/ui/star.svg`
+- Позиционирование: `WorldToClipSpaceConverter` → `PanoramaTransformations` (как FootstepVisualizer)
+- Цвет: `setWashColor()` на ImagePanel
+- Контейнер: `hudReticle` → `fitParent()` → панели внутри
+- Плавное затухание: opacity на основе времени жизни (2 секунды)
+- Движение игрока: delta позиции между кадрами, порог 0.05
 
 ### Что попробовать дальше
-1. Создать частицу с теми же параметрами что и рабочий зелёный квадрат (скопировать код точь-в-точь)
-2. Попробовать `panel.setOpacity(1.0f)`
-3. Попробовать `setStyleFlag()` с нужными флагами
-4. Посмотреть как PlayerInfoInWorld создаёт свои панели — он использует тот же подход и РАБОТАЕТ
-5. Возможно проблема в том, что `hudReticle` как parent не подходит для произвольных панелей
+1. Вызвать `updateParticleColors()` из `PanoramaGUI::onWorldParticleHueSliderValueChanged()`
+2. Реализовать Rain режим (частицы падают сверху экрана)
+3. Добавить новые типы частиц (Snow, Bloom, Dollar) когда найдём рабочие SVG
 
 ## Логирование
 

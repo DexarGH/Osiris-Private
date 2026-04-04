@@ -7,6 +7,7 @@
 #include <GameClient/Panorama/Slider.h>
 #include <GameClient/Panorama/TextEntry.h>
 #include <Platform/Macros/FunctionAttributes.h>
+#include <Utils/ColorUtils.h>
 #include <EntryPoints/GuiEntryPoints.h>
 
 #include "Tabs/VisualsTab/IntSlider.h"
@@ -255,6 +256,16 @@ private:
         updateHueSlider(mainMenu, sliderId, GET_CONFIG_VAR(ConfigVariable));
     }
 
+    void updateWorldParticleHueSlider(auto&& mainMenu, const char* sliderId) const noexcept
+    {
+        auto&& hueSlider = hookContext.template make<HueSlider>(mainMenu.findChildInLayoutFile(sliderId));
+        const auto hueValue = GET_CONFIG_VAR(world_particle_vars::ColorHue);
+        const auto hue = color::HueInteger{static_cast<std::uint16_t>(hueValue)};
+        hueSlider.updateSlider(hue);
+        hueSlider.updateTextEntry(hue);
+        hueSlider.updateColorPreview(hue);
+    }
+
     void updateHueSlider(auto&& mainMenu, const char* sliderId, color::HueInteger hue) const noexcept
     {
         auto&& hueSlider = hookContext.template make<HueSlider>(mainMenu.findChildInLayoutFile(sliderId));
@@ -294,6 +305,11 @@ private:
         initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, world_particle_vars::Enabled>>(guiPanel, "world_particle_enabled");
         initDropDown<WorldParticleModeDropdownSelectionChangeHandler<HookContext>>(guiPanel, "world_particle_mode");
         initDropDown<WorldParticleTypeDropdownSelectionChangeHandler<HookContext>>(guiPanel, "world_particle_type");
+        
+        // Регистрируем обработчики Hue слайдера
+        auto&& hueSlider = hookContext.template make<HueSlider>(guiPanel.findChildInLayoutFile("world_particle_color_hue"));
+        hueSlider.registerSliderValueChangedHandler(&GuiEntryPoints<HookContext>::worldParticleHueSliderValueChanged);
+        hueSlider.registerTextEntrySubmitHandler(&GuiEntryPoints<HookContext>::worldParticleHueSliderTextEntrySubmit);
     }
 
     void updateWorldParticleTab(auto&& mainMenu) const noexcept
@@ -302,9 +318,7 @@ private:
         setDropDownSelectedIndex(mainMenu, "world_particle_mode", static_cast<int>(GET_CONFIG_VAR(world_particle_vars::ModeType)));
         setDropDownSelectedIndex(mainMenu, "world_particle_type", static_cast<int>(GET_CONFIG_VAR(world_particle_vars::Type)));
         updateSlider<world_particle_vars::Count>(mainMenu, "world_particle_count");
-        updateSlider<world_particle_vars::ColorR>(mainMenu, "world_particle_color_r");
-        updateSlider<world_particle_vars::ColorG>(mainMenu, "world_particle_color_g");
-        updateSlider<world_particle_vars::ColorB>(mainMenu, "world_particle_color_b");
+        updateWorldParticleHueSlider(mainMenu, "world_particle_color_hue");
     }
 
     HookContext& hookContext;
