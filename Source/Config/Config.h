@@ -11,6 +11,7 @@
 #include "ConfigStringConversionState.h"
 #include "ConfigToString.h"
 #include "ConfigVariableChangeHandler.h"
+#include <Utils/Logger.h>
 
 #if IS_WIN64()
 #include <Platform/Windows/FileSystem/WindowsFileSystem.h>
@@ -70,23 +71,25 @@ public:
 
     void scheduleLoad() noexcept
     {
+        LOG("[Config] scheduleLoad called");
         state().loadScheduled = true;
+        state().autoSaveScheduled = false;
     }
 
     void update()
     {
         switch (state().currentFileOperation) {
         case ConfigFileOperation::None:
-            if (state().autoSaveScheduled) {
-                state().currentFileOperation = ConfigFileOperation::Save;
-                prepareSaveToFile();
-                state().autoSaveScheduled = false;
-                break;
-            }
             if (state().loadScheduled) {
                 state().currentFileOperation = ConfigFileOperation::Load;
                 state().bufferUsedBytes = 0;
                 state().loadScheduled = false;
+                break;
+            }
+            if (state().autoSaveScheduled) {
+                state().currentFileOperation = ConfigFileOperation::Save;
+                prepareSaveToFile();
+                state().autoSaveScheduled = false;
                 break;
             }
             break;
@@ -136,49 +139,72 @@ private:
 
     void loadFromFile() noexcept
     {
-        if (!state().pathToConfigFile)
+        LOG("[Config] loadFromFile called");
+        if (!state().pathToConfigFile) {
+            LOG("[Config] loadFromFile FAILED: pathToConfigFile is null");
             return;
+        }
+        LOG("[Config] Loading from: %s", state().pathToConfigFile.get());
 
 #if IS_WIN64()
         const std::basic_string_view path{state().pathToConfigFile.get(), utils::wcslen(state().pathToConfigFile.get())};
         UNICODE_STRING pathStr{.Length = static_cast<USHORT>(path.length() * sizeof(wchar_t)), .MaximumLength = static_cast<USHORT>(path.length() * sizeof(wchar_t)), .Buffer = const_cast<wchar_t*>(path.data())};
         if (const auto handle = WindowsFileSystem::openFileForReading(pathStr); handle != INVALID_HANDLE_VALUE) {
             state().bufferUsedBytes = WindowsFileSystem::readFile(handle, 0, state().fileOperationBuffer, build::kConfigFileBufferSize);
+            LOG("[Config] Read %zu bytes", state().bufferUsedBytes);
             WindowsSyscalls::NtClose(handle);
+        } else {
+            LOG("[Config] loadFromFile FAILED: could not open file");
         }
 #elif IS_LINUX()
         if (const auto fd = LinuxPlatformApi::open(state().pathToConfigFile.get(), O_RDONLY); fd >= 0) {
-            if (const auto read = LinuxPlatformApi::pread(fd, state().fileOperationBuffer, build::kConfigFileBufferSize, 0); read > 0)
+            if (const auto read = LinuxPlatformApi::pread(fd, state().fileOperationBuffer, build::kConfigFileBufferSize, 0); read > 0) {
                 state().bufferUsedBytes = static_cast<std::size_t>(read);
+                LOG("[Config] Read %zu bytes", state().bufferUsedBytes);
+            } else {
+                LOG("[Config] loadFromFile FAILED: read returned %ld", read);
+            }
             LinuxPlatformApi::close(fd);
+        } else {
+            LOG("[Config] loadFromFile FAILED: could not open file");
         }
 #endif
     }
 
     void finishLoadFromFile()
     {
+        LOG("[Config] finishLoadFromFile called, bufferUsedBytes=%zu", state().bufferUsedBytes);
         assert(state().currentFileOperation == ConfigFileOperation::Load);
         state().currentFileOperation = ConfigFileOperation::None;
 
         const auto readBytes = state().bufferUsedBytes;
         assert(readBytes < build::kConfigFileBufferSize && "Currently file must fit into a buffer");
-        ConfigStringConversionState conversionState;
-        std::size_t parsedBytes{0};
-        do {
-            assert(conversionState.offset <= readBytes);
-            ConfigFromString configFromString{std::span{state().fileOperationBuffer + conversionState.offset, readBytes - conversionState.offset}, conversionState};
-            parsedBytes = ConfigSchema{hookContext}.performConversion(configFromString);
-        } while (parsedBytes != 0 && (conversionState.nestingLevel != 0 || conversionState.indexInNestingLevel[0] != 1));
-        
-        assert(readBytes == 0 || (conversionState.nestingLevel == 0 && conversionState.indexInNestingLevel[0] == 1));
+        if (readBytes > 0) {
+            ConfigStringConversionState conversionState;
+            std::size_t parsedBytes{0};
+            do {
+                assert(conversionState.offset <= readBytes);
+                ConfigFromString configFromString{std::span{state().fileOperationBuffer + conversionState.offset, readBytes - conversionState.offset}, conversionState};
+                parsedBytes = ConfigSchema{hookContext}.performConversion(configFromString);
+            } while (parsedBytes != 0 && (conversionState.nestingLevel != 0 || conversionState.indexInNestingLevel[0] != 1));
+
+            LOG("[Config] Parsing complete, nestingLevel=%d", conversionState.nestingLevel);
+            assert(readBytes == 0 || (conversionState.nestingLevel == 0 && conversionState.indexInNestingLevel[0] == 1));
+        } else {
+            LOG("[Config] finishLoadFromFile: no data to parse");
+        }
+        // Очищаем pending save после успешной загрузки
+        state().autoSaveScheduled = false;
         hookContext.gui().updateFromConfig();
     }
 
     void prepareSaveToFile()
     {
+        LOG("[Config] prepareSaveToFile called");
         ConfigStringConversionState conversionState;
         ConfigToString configToString{std::span{state().fileOperationBuffer, build::kConfigFileBufferSize}, conversionState};
         state().bufferUsedBytes = ConfigSchema{hookContext}.performConversion(configToString);
+        LOG("[Config] prepareSaveToFile: bufferUsedBytes=%zu", state().bufferUsedBytes);
         assert(conversionState.nestingLevel == 0 && conversionState.indexInNestingLevel[0] == 1);
     }
 
@@ -187,9 +213,25 @@ private:
         assert(state().currentFileOperation == ConfigFileOperation::Save);
         state().currentFileOperation = ConfigFileOperation::None;
 
-        if (!hookContext.osirisDirectoryPath().get() || !state().pathToConfigDirectory || !state().pathToConfigFile || !state().pathToConfigTempFile)
+        LOG("[Config] saveToFile called");
+        if (!hookContext.osirisDirectoryPath().get()) {
+            LOG("[Config] saveToFile FAILED: osirisDirectoryPath is null");
             return;
+        }
+        if (!state().pathToConfigDirectory) {
+            LOG("[Config] saveToFile FAILED: pathToConfigDirectory is null");
+            return;
+        }
+        if (!state().pathToConfigFile) {
+            LOG("[Config] saveToFile FAILED: pathToConfigFile is null");
+            return;
+        }
+        if (!state().pathToConfigTempFile) {
+            LOG("[Config] saveToFile FAILED: pathToConfigTempFile is null");
+            return;
+        }
 
+        LOG("[Config] Saving to: %s", state().pathToConfigFile.get());
         const auto numberOfBytesToWrite = state().bufferUsedBytes;
 #if IS_WIN64()
         WindowsFileSystem::createDirectory(hookContext.osirisDirectoryPath().get());

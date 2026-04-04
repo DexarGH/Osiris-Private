@@ -10,10 +10,10 @@
     LOG_INIT();
     LOG("[Init] finishInit called");
     hookContext.entityClassifier().init(hookContext);
-    if (const auto mainMenu{hookContext.patternSearchResults().template get<MainMenuPanelPointer>()}; mainMenu && *mainMenu)
-        hookContext.template make<PanoramaGUI>().init(hookContext.template make<PanoramaUiPanel>((*mainMenu)->uiPanel));
     hookContext.config().init();
     hookContext.config().scheduleLoad();
+    if (const auto mainMenu{hookContext.patternSearchResults().template get<MainMenuPanelPointer>()}; mainMenu && *mainMenu)
+        hookContext.template make<PanoramaGUI>().init(hookContext.template make<PanoramaUiPanel>((*mainMenu)->uiPanel));
     hookContext.hooks().peepEventsHook.disable();
     hookContext.hooks().viewRenderHook.install();
 }
