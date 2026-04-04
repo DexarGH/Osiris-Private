@@ -828,7 +828,7 @@ u8R"(
   separator(worldParticle);
   createDropDown(worldParticle, "Mode", 'visuals', 'world_particle_mode', ['Rain', 'Tail']);
   separator(worldParticle);
-  createDropDown(worldParticle, "Particle", 'visuals', 'world_particle_type', ['Star', 'Snow', 'Bloom', 'Dollar']);
+  createDropDown(worldParticle, "Particle", 'visuals', 'world_particle_type', ['Star']);
   separator(worldParticle);
   createSlider(worldParticle, "R", 'visuals', 'world_particle_color_r', 0, 255);
   separator(worldParticle);

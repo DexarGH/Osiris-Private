@@ -1,6 +1,11 @@
 #pragma once
 
+#include <cstdio>
 #include <cstring>
+
+#ifdef __linux__
+#include <dlfcn.h>
+#endif
 
 #include <CS2/Panorama/CUILength.h>
 #include <CS2/Panorama/CUIPanel.h>
@@ -17,44 +22,16 @@
 #include "WorldParticleConfigVariables.h"
 #include "WorldParticleState.h"
 
-#ifdef __linux__
-#include <dlfcn.h>
-#include <linux/limits.h>
-#endif
+#include <cstdio>
+#include <cstring>
 
 static const char* getParticleSvgPath(world_particle_vars::ParticleType type) noexcept
 {
-    const char* svgFile = nullptr;
+    // Заготовка для будущих типов — сейчас только Star
     switch (type) {
-        case world_particle_vars::ParticleType::Star:   svgFile = "star.svg"; break;
-        case world_particle_vars::ParticleType::Snow:   svgFile = "snow.svg"; break;
-        case world_particle_vars::ParticleType::Bloom:  svgFile = "bloom.svg"; break;
-        case world_particle_vars::ParticleType::Dollar: svgFile = "dollar.svg"; break;
-        default: svgFile = "stomp_damage.svg"; break;
+        case world_particle_vars::ParticleType::Star: return "s2r://panorama/images/icons/ui/star.svg";
+        default: return "s2r://panorama/images/icons/ui/star.svg";
     }
-    
-    if (__builtin_strcmp(svgFile, "stomp_damage.svg") == 0)
-        return "s2r://panorama/images/icons/equipment/stomp_damage.svg";
-    
-    static char svgPathBuffer[PATH_MAX];
-#ifdef __linux__
-    Dl_info info;
-    if (dladdr((void*)&getParticleSvgPath, &info) && info.dli_fname) {
-        const char* lastSlash = __builtin_strrchr(info.dli_fname, '/');
-        if (lastSlash) {
-            int dirLen = lastSlash - info.dli_fname;
-            __builtin_memcpy(svgPathBuffer, info.dli_fname, dirLen);
-            svgPathBuffer[dirLen] = '\0';
-            __builtin_strcat(svgPathBuffer, "/Resources/");
-            __builtin_strcat(svgPathBuffer, svgFile);
-            return svgPathBuffer;
-        }
-    }
-#endif
-    
-    __builtin_strcpy(svgPathBuffer, "Resources/");
-    __builtin_strcat(svgPathBuffer, svgFile);
-    return svgPathBuffer;
 }
 
 struct WorldParticlePanel {
@@ -99,8 +76,21 @@ public:
             return;
         }
 
-        // Проверяем движение
+        // Если тип изменился — пересоздаём все панели (заготовка для будущих типов)
         auto& state = getState();
+        if (state.lastParticleType != GET_CONFIG_VAR(world_particle_vars::Type)) {
+            state.lastParticleType = GET_CONFIG_VAR(world_particle_vars::Type);
+            for (auto& particle : state.particles) {
+                if (particle.panelHandle.isValid()) {
+                    hookContext.template make<PanoramaUiEngine>().deletePanelByHandle(particle.panelHandle);
+                    particle.panelHandle = {};
+                    particle.active = false;
+                }
+            }
+            state.particleCount = 0;
+        }
+
+        // Проверяем движение
         if (!state.lastPosInitialized) {
             state.lastPlayerX = origin.value().x;
             state.lastPlayerY = origin.value().y;
@@ -118,7 +108,8 @@ public:
         state.lastPlayerZ = origin.value().z;
 
         if (movementSpeed < 0.05f) {
-            hideAll();
+            // Не скрываем мгновенно — позволяем частицам дожить и исчезнуть плавно
+            updateActiveParticles();
             return;
         }
 

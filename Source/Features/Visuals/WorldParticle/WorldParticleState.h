@@ -3,6 +3,7 @@
 #include <CS2/Classes/Vector.h>
 #include <CS2/Panorama/PanelHandle.h>
 #include <array>
+#include "WorldParticleConfigVariables.h"
 
 struct ParticleData {
     cs2::PanelHandle panelHandle{};
@@ -24,4 +25,7 @@ struct WorldParticleState {
     float lastPlayerY{0.0f};
     float lastPlayerZ{0.0f};
     bool lastPosInitialized{false};
+    
+    // Заготовка для отслеживания смены типа частиц
+    world_particle_vars::ParticleType lastParticleType{world_particle_vars::ParticleType::Star};
 };

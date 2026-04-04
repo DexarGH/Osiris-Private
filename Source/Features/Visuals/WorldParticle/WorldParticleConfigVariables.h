@@ -14,10 +14,7 @@ enum class Mode : std::uint8_t {
 };
 
 enum class ParticleType : std::uint8_t {
-    Star,
-    Snow,
-    Bloom,
-    Dollar
+    Star
 };
 
 constexpr auto kCountParams = RangeConstrainedVariableParams<std::uint16_t>{
@@ -47,7 +44,7 @@ constexpr auto kColorBParams = RangeConstrainedVariableParams<std::uint16_t>{
 CONFIG_VARIABLE(Enabled, bool, false);
 CONFIG_VARIABLE_RANGE(Count, kCountParams);
 CONFIG_VARIABLE(ModeType, Mode, Mode::Tail);
-CONFIG_VARIABLE(Type, ParticleType, ParticleType::Snow);
+CONFIG_VARIABLE(Type, ParticleType, ParticleType::Star);
 CONFIG_VARIABLE_RANGE(ColorR, kColorRParams);
 CONFIG_VARIABLE_RANGE(ColorG, kColorGParams);
 CONFIG_VARIABLE_RANGE(ColorB, kColorBParams);

@@ -12,11 +12,9 @@ struct WorldParticleTypeDropdownSelectionChangeHandler {
 
     void onSelectionChanged(int selectedIndex)
     {
+        // Заготовка для будущих типов — сейчас только Star
         switch (selectedIndex) {
         case 0: SET_CONFIG_VAR(world_particle_vars::Type, world_particle_vars::ParticleType::Star); break;
-        case 1: SET_CONFIG_VAR(world_particle_vars::Type, world_particle_vars::ParticleType::Snow); break;
-        case 2: SET_CONFIG_VAR(world_particle_vars::Type, world_particle_vars::ParticleType::Bloom); break;
-        case 3: SET_CONFIG_VAR(world_particle_vars::Type, world_particle_vars::ParticleType::Dollar); break;
         default: break;
         }
     }
