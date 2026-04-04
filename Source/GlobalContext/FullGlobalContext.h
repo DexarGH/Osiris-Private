@@ -38,6 +38,7 @@
 #include "OsirisDirectoryPath.h"
 
 #include <CS2/Classes/ConVarTypes.h>
+#include <GameClient/Input/InputState.h>
 
 struct FullGlobalContext {
     FullGlobalContext(PeepEventsHook peepEventsHook, DynamicLibrary clientDLL, DynamicLibrary panoramaDLL, const MemoryPatterns& memoryPatterns, Tier0Dll tier0Dll) noexcept
@@ -64,6 +65,7 @@ struct FullGlobalContext {
     std::optional<PanoramaSymbols> panoramaSymbols;
     Hooks hooks;
     SoundWatcherState soundWatcherState;
+    InputType inputState;
     FeaturesStates featuresStates;
     PanoramaGuiState panoramaGuiState;
     BombStatusPanelState bombStatusPanelState;

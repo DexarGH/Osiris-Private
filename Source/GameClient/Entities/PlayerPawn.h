@@ -175,6 +175,15 @@ public:
         return getActiveWeapon().isSniperRifle();
     }
 
+    [[nodiscard]] std::optional<std::int32_t> getIdEntityIndex() const noexcept
+    {
+        // Fallback на фиксированный оффсет 0x13A8 (или 0x13B0 в некоторых билдах)
+        constexpr std::int32_t kFallbackOffset = 0x13A8;
+        if (playerPawn)
+            return *reinterpret_cast<std::int32_t*>(reinterpret_cast<std::byte*>(playerPawn) + kFallbackOffset);
+        return std::nullopt;
+    }
+
 private:
     [[nodiscard]] auto sceneObjectUpdaterHandle() const noexcept
     {

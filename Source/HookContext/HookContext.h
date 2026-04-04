@@ -242,6 +242,11 @@ struct HookContext {
         return SoundWatcher<HookContext>{fullGlobalContext.soundWatcherState, *this};
     }
 
+    [[nodiscard]] auto& input() noexcept
+    {
+        return fullGlobalContext.inputState;
+    }
+
     [[nodiscard]] auto uiPanel(cs2::CUIPanel* panel) noexcept
     {
         return PanoramaUiPanel<HookContext>{*this, panel};

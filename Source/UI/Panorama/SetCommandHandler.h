@@ -51,6 +51,14 @@ private:
             handleIntSlider<aimbot::MultiPointSize>("aimbot_multi_point_size");
         } else if (feature == "aimbot_multi_point_size_text") {
             handleIntSliderTextEntry<aimbot::MultiPointSize>("aimbot_multi_point_size");
+        } else if (feature == "triggerbot_min_delay") {
+            handleIntSlider<trigger_bot::MinDelay>("triggerbot_min_delay");
+        } else if (feature == "triggerbot_min_delay_text") {
+            handleIntSliderTextEntry<trigger_bot::MinDelay>("triggerbot_min_delay");
+        } else if (feature == "triggerbot_max_delay") {
+            handleIntSlider<trigger_bot::MaxDelay>("triggerbot_max_delay");
+        } else if (feature == "triggerbot_max_delay_text") {
+            handleIntSliderTextEntry<trigger_bot::MaxDelay>("triggerbot_max_delay");
         }
     }
 

@@ -77,6 +77,7 @@ void ViewRenderHook_onRenderStart(cs2::CViewRender* thisptr) noexcept
 
     hookContext.make<Aimbot>().run();
     hookContext.make<NoScopeInaccuracyVis>().update();
+    hookContext.make<TriggerBot>().run();
     hookContext.make<FovCircle>().update();
     hookContext.make<Rain>().update();
     hookContext.make<Tail>().update();

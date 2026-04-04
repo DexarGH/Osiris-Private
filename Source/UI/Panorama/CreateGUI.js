@@ -238,6 +238,14 @@ $.Osiris = (function () {
     });
 
     $.CreatePanel('Label', sniperRiflesTabButton, '', { text: "Sniper rifles" });
+
+    var triggerBotTabButton = $.CreatePanel('RadioButton', centerContainer, 'trigger_bot_button', {
+      group: "CombatNavBar",
+      class: "content-navbar__tabs__btn",
+      onactivate: "$.Osiris.navigateToSubTab('combat', 'trigger_bot');"
+    });
+
+    $.CreatePanel('Label', triggerBotTabButton, '', { text: "Trigger Bot" });
   };
 
   createNavbar();
@@ -554,6 +562,33 @@ u8R"(
   var noScope = createSection(sniperRiflesTab, 'No scope');
   separator(noScope);
   createYesNoDropDown(noScope, "Visualize Inaccuracy When Not Using a Scope", 'combat', 'no_scope_inacc_vis');
+
+  var triggerBotTab = createSubTab(combat, 'trigger_bot');
+  var triggerBotSection = createSection(triggerBotTab, 'Trigger Bot Settings');
+  createYesNoDropDown(triggerBotSection, "Enable", 'combat', 'triggerbot_enabled');
+  separator(triggerBotSection);
+  createDropDown(triggerBotSection, "Bind", 'combat', 'triggerbot_bind', [
+    'K', 'Left Alt', 'Left Shift', 'C', 'X',
+    'MOUSE_0', 'MOUSE_1', 'MOUSE_2', 'MOUSE_3', 'MOUSE_4',
+    'Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
+    '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace',
+    'Tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\',
+    'Caps Lock', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'L', ';', '\'', 'Enter',
+    'Left Ctrl', 'Left Win', 'Space', 'Right Alt', 'Right Win', 'Menu', 'Right Ctrl',
+    'Z', 'V', 'B', 'N', 'M', ',', '.', '/', 'Right Shift',
+    'Print Screen', 'Scroll Lock', 'Pause', 'Insert', 'Home', 'Page Up', 'Delete', 'End', 'Page Down',
+    'Arrow Up', 'Arrow Left', 'Arrow Down', 'Arrow Right',
+    'Num Lock', 'NumPad /', 'NumPad *', 'NumPad -', 'NumPad +', 'NumPad Enter',
+    'NumPad 1', 'NumPad 2', 'NumPad 3', 'NumPad 4', 'NumPad 5', 'NumPad 6', 'NumPad 7', 'NumPad 8', 'NumPad 9', 'NumPad 0', 'NumPad .'
+  ]);
+  separator(triggerBotSection);
+  createDropDown(triggerBotSection, "Bind Mode", 'combat', 'triggerbot_bind_mode', ['Hold', 'Toggle', 'Always On']);
+  separator(triggerBotSection);
+  createSlider(triggerBotSection, "Min Delay", 'combat', 'triggerbot_min_delay', 0, 999);
+  separator(triggerBotSection);
+  createSlider(triggerBotSection, "Max Delay", 'combat', 'triggerbot_max_delay', 0, 999);
+  separator(triggerBotSection);
+  createYesNoDropDown(triggerBotSection, "Head Only", 'combat', 'triggerbot_head_only');
 
   $.Osiris.navigateToSubTab('combat', 'aim_bot');
 

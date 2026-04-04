@@ -4,6 +4,7 @@
 #include "Combat/SniperRifles/NoScopeInaccuracyVis/NoScopeInaccuracyVisState.h"
 #include "Hud/FovCircle/FovCircleState.h"
 #include "Hud/HudFeaturesStates.h"
+#include "TriggerBot/TriggerBotState.h"
 #include "Visuals/VisualFeaturesStates.h"
 
 struct FeaturesStates {
@@ -12,4 +13,5 @@ struct FeaturesStates {
     VisualFeaturesStates visualFeaturesStates;
     NoScopeInaccuracyVisState noScopeInaccuracyVisState;
     FovCircleState fovCircleState;
+    TriggerBotState triggerBotState;
 };

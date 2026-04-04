@@ -43,6 +43,69 @@ public:
 #endif
     }
 
+    void simulateAttack() noexcept
+    {
+#if IS_WIN64()
+        if (!sendInput)
+            sendInput = WindowsDynamicLibrary{"user32.dll"}.getFunctionAddress("SendInput").as<decltype(&::SendInput)>();
+        if (!sendInput)
+            return;
+
+        INPUT press{};
+        press.type = INPUT_MOUSE;
+        press.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+        sendInput(1, &press, sizeof(INPUT));
+
+        INPUT release{};
+        release.type = INPUT_MOUSE;
+        release.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+        sendInput(1, &release, sizeof(INPUT));
+#endif
+    }
+
+    [[nodiscard]] bool isKeyboardKeyPressed(std::uint16_t code) const noexcept
+    {
+#if IS_WIN64()
+        return keyboardStates[code];
+#else
+        static_cast<void>(code);
+        return false;
+#endif
+    }
+
+    [[nodiscard]] bool getMouseButtonState(std::uint8_t button) const noexcept
+    {
+#if IS_WIN64()
+        return mouseButtonStates[button];
+#else
+        static_cast<void>(button);
+        return false;
+#endif
+    }
+
+    void updateKeyboardState(const bool* states) noexcept
+    {
+#if IS_WIN64()
+        if (states) {
+            for (std::size_t i = 0; i < 256; ++i)
+                keyboardStates[i] = states[i];
+        }
+#else
+        static_cast<void>(states);
+#endif
+    }
+
+    void updateMouseButtonState(std::uint8_t button, bool pressed) noexcept
+    {
+#if IS_WIN64()
+        if (button < 8)
+            mouseButtonStates[button] = pressed;
+#else
+        static_cast<void>(button);
+        static_cast<void>(pressed);
+#endif
+    }
+
 private:
 #if IS_WIN64()
     [[nodiscard]] static int roundToInt(float value) noexcept
@@ -56,4 +119,6 @@ private:
     float subPixelRemainderX{0.0f};
     float subPixelRemainderY{0.0f};
 #endif
+    bool keyboardStates[256]{};
+    bool mouseButtonStates[8]{};
 };

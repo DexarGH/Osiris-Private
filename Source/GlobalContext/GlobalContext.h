@@ -16,6 +16,7 @@
 #include <GameClient/Entities/PreviewPlayer.h>
 #include <Features/Aimbot/Aimbot.h>
 #include <Features/Combat/SniperRifles/NoScopeInaccuracyVis/NoScopeInaccuracyVis.h>
+#include <Features/TriggerBot/TriggerBot.h>
 #include <Features/Hud/DefusingAlert/DefusingAlert.h>
 #include <Features/Hud/FovCircle/FovCircle.h>
 #include <Features/Hud/KillfeedPreserver/KillfeedPreserver.h>

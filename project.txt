@@ -50,12 +50,16 @@ Source/
 │   │   ├── OutlineGlow/    # Outline glow
 │   │   ├── PlayerInfoInWorld/ # ESP информация над игроками
 │   │   ├── ViewmodelMod/   # Модификация viewmodel
-│   │   └── WorldParticle/  # Частицы (Rain/Tail режимы)
+│   │   ├── Rain/           # Падающие частицы (дождь)
+│   │   ├── Tail/           # Частицы-хвост за игроком
+│   │   └── ParticleData.h  # Общая структура данных частиц
 │   └── Common/             # Общие компоненты (InWorldPanels)
+│   ├── TriggerBot/         # Trigger Bot (ЗАГЛУШКА — оффсет m_iIDEntIndex неверен)
 │
 ├── GameClient/             # Абстракции над клиентом игры
 │   ├── Entities/           # Классы сущностей (BaseEntity, PlayerPawn, и т.д.)
 │   ├── Panorama/           # Обёртки над Panorama UI
+│   ├── Input/              # Ввод (LinuxInput, WindowsInput — эмуляция кликов)
 │   └── WorldToScreen/      # Конвертация мировых координат в экранные
 │
 ├── GlobalContext/          # Глобальный контекст (инициализация, хранение состояний)
@@ -91,7 +95,8 @@ Source/
 4. **Каждый кадр** → `ViewRenderHook_onRenderStart()` вызывает все фичи:
    - Aimbot
    - FOV Circle
-   - World Particles (РАБОТАЕТ — Tail режим, см. ниже)
+   - Rain (падающие частицы)
+   - Tail (частицы-хвост)
    - Glow
    - HUD элементы
    - GUI
@@ -129,32 +134,71 @@ Source/
 - Player Info In World (ESP)
 - Viewmodel Modification
 
-## World Particle
-
-### Что работает
+### TriggerBot (Combat -> Trigger Bot) — ЗАГЛУШКА ❌
 - **Enable** (Yes/No)
-- **Count** (1-500) — количество частиц
-- **Mode** — Tail (работает), Rain (НЕ РЕАЛИЗОВАН — скрывает частицы)
-- **Particle** — только Star (SVG: `star.svg`), остальные заготовлены но не используются
-- **Color** — Hue слайдер (0-360°) с квадратиком превью цвета
+- **Bind** — 109 кнопок (как у Aimbot)
+- **Bind Mode** — Hold/Toggle/Always On
+- **Min Delay** (0-999 мс) — случайная задержка перед выстрелом
+- **Max Delay** (0-999 мс)
+- **Head Only** (Yes/No) — заглушка, требует bone checks
 
-### Текущая проблема
-- **Цвет существующих частиц не обновляется при смене Hue**: новые частицы тоже спавнятся с старым цветом
-- Нужно: при изменении Hue слайдера вызвать `updateParticleColors()` для всех активных частиц
-- Метод `updateParticleColors()` уже есть в коде, но не вызывается из GUI handler'а
+**Проблема:** Оффсет `m_iIDEntIndex` (0x13A8) неверен для текущего билда CS2. Функция `getIdEntityIndex()` возвращает мусор, TriggerBot не определяет цель под прицелом. Нужен актуальный паттерн или оффсет.
 
-### Архитектура
-- SVG: `s2r://panorama/images/icons/ui/star.svg`
-- Позиционирование: `WorldToClipSpaceConverter` → `PanoramaTransformations` (как FootstepVisualizer)
-- Цвет: `setWashColor()` на ImagePanel
+**Реализовано:**
+- Эмуляция клика мыши (uinput Linux / SendInput Windows)
+- Определение врага через `isEnemy()` (сравнение teamNumber)
+- Проверка жив/мёртв через `isAlive()`
+- Все настройки GUI и конфиг полностью работают
+
+## Rain (Визуальная вкладка World Particle -> Rain)
+
+### Что работает ✅
+- **Enable** (Yes/No)
+- **Count** (1-500) — максимальное количество частиц
+- **Spawn Radius** (100-2000) — радиус спавна вокруг игрока
+- **Tilt Angle** (0-90°) — наклон падения (0=вниз, 90=горизонтально)
+- **Speed** (1-500) — скорость падения
+- **Live Time** (1-20 сек) — время жизни каждой частицы
+- **Particle** — Star (SVG: `star.svg`)
+- **Color** — Hue слайдер (0-360°) с превью цвета
+
+### Как работает
+- Частицы спавнятся в случайных позициях в радиусе вокруг игрока на высоте +100..+800
+- Падают вниз со скоростью `Speed` и наклоном `TiltAngle`
+- Когда `LiveTime` истекает — частица умирает и слот переиспользуется
+- Прозрачность уменьшается к концу жизни
+- Скрываются за спиной игрока (`clipSpace.z < minClipZ`)
+
+## Tail (Визуальная вкладка World Particle -> Tail)
+
+### Что работает ✅
+- **Enable** (Yes/No)
+- **Live Time** (1-60 сек) — время жизни каждой частицы
+- **Spawn Rate** (0-999 мс) — задержка между спавнами
+- **Particle** — Star (SVG: `star.svg`)
+- **Color** — Hue слайдер (0-360°) с превью цвета
+
+### Как работает
+- Частицы спавнятся только при движении игрока (порог 0.05)
+- Спавнятся в позиции игрока с задержкой `SpawnRate` мс
+- Когда `LiveTime` истекает — частица умирает и слот переиспользуется
+- Максимум 1000 слотов (жёсткий лимит массива)
+- Скрываются за спиной игрока (`clipSpace.z < minClipZ`)
+
+## Архитектура частиц
+
+### Общие компоненты
+- `ParticleData.h` — общая структура с `panelHandle`, `imagePanelHandle`, `origin`, `currentPos`
+- `clipSpace.onScreen()` — проверка видимости на экране
+- `minClipZ = 10.0f` — минимальное расстояние от камеры
+- Цвет: `setWashColor()` на ImagePanel (дочерняя панель)
 - Контейнер: `hudReticle` → `fitParent()` → панели внутри
-- Плавное затухание: opacity на основе времени жизни (2 секунды)
-- Движение игрока: delta позиции между кадрами, порог 0.05
+- Позиционирование: `WorldToClipSpaceConverter` → `PanoramaTransformations`
 
-### Что попробовать дальше
-1. Вызвать `updateParticleColors()` из `PanoramaGUI::onWorldParticleHueSliderValueChanged()`
-2. Реализовать Rain режим (частицы падают сверху экрана)
-3. Добавить новые типы частиц (Snow, Bloom, Dollar) когда найдём рабочие SVG
+### Исправления
+- Цвет частиц корректно обновляется при смене Hue (используется `imagePanelHandle`)
+- `recreateAllParticles()` — полный пересоздание при смене цвета
+- Конфиг: Load приоритет над Save при запуске
 
 ## Логирование
 
@@ -172,6 +216,22 @@ Source/
 LOG("[Feature] Message: %d, %.2f", intValue, floatValue);
 LOG_INIT();  // В init
 ```
+
+## Система конфигов
+
+### Где хранится
+`~/OsirisCS2/configs/default.cfg`
+
+### Как работает
+- Загрузка конфига происходит **до** инициализации GUI
+- Load имеет приоритет над Save при запуске
+- `scheduleLoad()` очищает `autoSaveScheduled`
+- После успешной загрузки pending save отменяется
+
+### Что делать если настройки сбрасываются
+1. Проверить логи на наличие `[Config]` записей
+2. Убедиться что файл `default.cfg` существует и содержит корректный JSON
+3. Проверить что `osirisDirectoryPath` не `nullptr`
 
 ## Как добавить новую фичу
 

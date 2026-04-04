@@ -2,6 +2,7 @@
 
 #include <Features/Aimbot/AimbotConfigVariables.h>
 #include <Features/Combat/SniperRifles/NoScopeInaccuracyVis/NoScopeInaccuracyVisConfigVariables.h>
+#include <Features/TriggerBot/TriggerBotConfigVariables.h>
 #include <Features/Hud/BombPlantAlert/BombPlantAlertConfigVariables.h>
 #include <Features/Hud/BombTimer/BombTimerConfigVariables.h>
 #include <Features/Hud/DefusingAlert/DefusingAlertConfigVariables.h>
@@ -111,6 +112,12 @@ using ConfigVariableTypes = TypeList<
     viewmodel_mod_vars::ModifyFov,
     viewmodel_mod_vars::Fov,
     no_scope_inaccuracy_vis_vars::Enabled,
+    trigger_bot::Enabled,
+    trigger_bot::Bind,
+    trigger_bot::BindModeType,
+    trigger_bot::MinDelay,
+    trigger_bot::MaxDelay,
+    trigger_bot::HeadOnly,
     BombPlantAlertEnabled,
     fov_circle_vars::Enabled,
     fov_circle_vars::Thickness,

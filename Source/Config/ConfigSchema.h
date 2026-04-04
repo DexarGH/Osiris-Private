@@ -45,6 +45,15 @@ private:
         configConversion.boolean(u8"Enabled", loadVariable<no_scope_inaccuracy_vis_vars::Enabled>(), saveVariable<no_scope_inaccuracy_vis_vars::Enabled>());
         configConversion.endObject();
 
+        configConversion.beginObject(u8"TriggerBot");
+        configConversion.boolean(u8"Enabled", loadVariable<trigger_bot::Enabled>(), saveVariable<trigger_bot::Enabled>());
+        configConversion.uint(u8"Bind", loadVariable<trigger_bot::Bind>(), saveVariable<trigger_bot::Bind>());
+        configConversion.uint(u8"BindMode", loadVariable<trigger_bot::BindModeType>(), saveVariable<trigger_bot::BindModeType>());
+        configConversion.uint(u8"MinDelay", loadVariable<trigger_bot::MinDelay>(), saveVariable<trigger_bot::MinDelay>());
+        configConversion.uint(u8"MaxDelay", loadVariable<trigger_bot::MaxDelay>(), saveVariable<trigger_bot::MaxDelay>());
+        configConversion.boolean(u8"HeadOnly", loadVariable<trigger_bot::HeadOnly>(), saveVariable<trigger_bot::HeadOnly>());
+        configConversion.endObject();
+
         configConversion.endObject();
     }
 
