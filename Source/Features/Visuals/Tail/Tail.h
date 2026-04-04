@@ -74,6 +74,8 @@ public:
         }
 
         auto& state = getState();
+
+        // Проверяем смену типа частиц
         if (state.lastParticleType != GET_CONFIG_VAR(tail_vars::Type)) {
             state.lastParticleType = GET_CONFIG_VAR(tail_vars::Type);
             for (auto& particle : state.particles) {
@@ -90,6 +92,7 @@ public:
             state.particleCount = 0;
         }
 
+        // Инициализируем позицию
         if (!state.lastPosInitialized) {
             state.lastPlayerX = origin.value().x;
             state.lastPlayerY = origin.value().y;
@@ -106,13 +109,13 @@ public:
         state.lastPlayerY = origin.value().y;
         state.lastPlayerZ = origin.value().z;
 
-        if (movementSpeed < 0.05f) {
-            updateActiveParticles();
-            return;
-        }
+        // Обновляем время жизни и отображение
+        updateTailParticles();
 
-        spawnParticle(origin.value());
-        updateActiveParticles();
+        // Спавним только при движении
+        if (movementSpeed >= 0.05f) {
+            spawnTailParticles(origin.value());
+        }
     }
 
     void onUnload() const
@@ -155,17 +158,88 @@ private:
         }
     }
 
-    void spawnParticle(const cs2::Vector& origin) const
+    void updateTailParticles() const
     {
         auto& state = getState();
-        const auto targetCount = static_cast<std::uint16_t>(GET_CONFIG_VAR(tail_vars::Count));
+        const auto curtime = hookContext.globalVars().curtime();
+        if (!curtime.hasValue())
+            return;
 
+        const float liveTime = static_cast<float>(GET_CONFIG_VAR(tail_vars::LiveTime));
+
+        // Обновляем время жизни и отображение
         for (std::uint16_t i = 0; i < state.particleCount; ++i) {
             auto& particle = state.particles[i];
-            if (!particle.active || particle.opacity <= 0.0f) {
-                particle.origin = origin;
-                particle.spawnTime = hookContext.globalVars().curtime().valueOr(0.0f);
-                particle.maxLife = 2.0f;
+            if (!particle.active || !particle.panelHandle.isValid())
+                continue;
+
+            const float timeAlive = curtime.value() - particle.spawnTime;
+
+            // Проверяем время жизни
+            if (timeAlive >= liveTime) {
+                particle.active = false;
+                hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle).setVisible(false);
+                continue;
+            }
+
+            // Конвертируем в экранные координаты
+            const auto clipSpace = hookContext.template make<WorldToClipSpaceConverter>().toClipSpace(particle.origin);
+            
+            // Скрываем частицы за спиной (z <= 0) или слишком близко к камере
+            constexpr float minClipZ = 10.0f; // Минимальное расстояние от камеры
+            if (clipSpace.z < minClipZ || !clipSpace.onScreen()) {
+                hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle).setVisible(false);
+                continue;
+            }
+
+            auto&& panel = hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle);
+
+            const float fovScale = ViewToProjectionMatrix{hookContext}.getFovScale();
+            const float scale = TailParticlePanel::getScale(clipSpace.z, fovScale);
+            
+            // Прозрачность на основе времени жизни
+            const float lifeRatio = timeAlive / liveTime;
+            const float opacity = 1.0f - lifeRatio;
+
+            if (opacity <= 0.0f) {
+                particle.active = false;
+                panel.setVisible(false);
+                continue;
+            }
+
+            const auto deviceCoordinates = clipSpace.toNormalizedDeviceCoordinates();
+
+            PanoramaTransformations{
+                hookContext.panoramaTransformFactory().scale(scale),
+                hookContext.panoramaTransformFactory().translate(deviceCoordinates.getX(), deviceCoordinates.getY())
+            }.applyTo(panel);
+
+            panel.setOpacity(opacity);
+            panel.setZIndex(-clipSpace.z);
+            panel.setVisible(true);
+        }
+    }
+
+    void spawnTailParticles(const cs2::Vector& playerOrigin) const
+    {
+        auto& state = getState();
+        const auto curtime = hookContext.globalVars().curtime();
+        if (!curtime.hasValue())
+            return;
+
+        // Проверяем задержку спавна
+        const float spawnRateSec = static_cast<float>(GET_CONFIG_VAR(tail_vars::SpawnRate)) / 1000.0f;
+        if (curtime.value() - state.lastSpawnTime < spawnRateSec)
+            return;
+
+        state.lastSpawnTime = curtime.value();
+
+        // Ищем деактивированную частицу
+        for (std::uint16_t i = 0; i < state.particleCount; ++i) {
+            auto& particle = state.particles[i];
+            if (!particle.active) {
+                particle.origin = playerOrigin;
+                particle.spawnTime = curtime.value();
                 particle.active = true;
                 if (!particle.panelHandle.isValid())
                     createParticlePanel(particle);
@@ -173,11 +247,11 @@ private:
             }
         }
 
-        if (state.particleCount < targetCount) {
+        // Если нет свободных слотов — создаём новый
+        if (state.particleCount < 1000) {
             auto& particle = state.particles[state.particleCount];
-            particle.origin = origin;
-            particle.spawnTime = hookContext.globalVars().curtime().valueOr(0.0f);
-            particle.maxLife = 2.0f;
+            particle.origin = playerOrigin;
+            particle.spawnTime = curtime.value();
             particle.active = true;
             createParticlePanel(particle);
             state.particleCount++;

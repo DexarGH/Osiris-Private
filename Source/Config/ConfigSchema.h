@@ -199,6 +199,8 @@ private:
         configConversion.beginObject(u8"Tail");
         configConversion.boolean(u8"Enabled", loadVariable<tail_vars::Enabled>(), saveVariable<tail_vars::Enabled>());
         configConversion.uint(u8"Count", loadVariable<tail_vars::Count>(), saveVariable<tail_vars::Count>());
+        configConversion.uint(u8"LiveTime", loadVariable<tail_vars::LiveTime>(), saveVariable<tail_vars::LiveTime>());
+        configConversion.uint(u8"SpawnRate", loadVariable<tail_vars::SpawnRate>(), saveVariable<tail_vars::SpawnRate>());
         configConversion.uint(u8"Type", loadVariable<tail_vars::Type>(), saveVariable<tail_vars::Type>());
         configConversion.uint(u8"ColorHue", loadVariable<tail_vars::ColorHue>(), saveVariable<tail_vars::ColorHue>());
         configConversion.endObject();

@@ -16,6 +16,7 @@ struct TailState {
     float lastPlayerY{0.0f};
     float lastPlayerZ{0.0f};
     bool lastPosInitialized{false};
+    float lastSpawnTime{0.0f};
 
     tail_vars::ParticleType lastParticleType{tail_vars::ParticleType::Star};
 };

@@ -20,11 +20,25 @@ constexpr auto kCountParams = RangeConstrainedVariableParams<std::uint16_t>{
     .def = 50
 };
 
+constexpr auto kLiveTimeParams = RangeConstrainedVariableParams<std::uint16_t>{
+    .min = 1,
+    .max = 60,
+    .def = 5
+};
+
+constexpr auto kSpawnRateParams = RangeConstrainedVariableParams<std::uint16_t>{
+    .min = 0,
+    .max = 999,
+    .def = 50
+};
+
 using ColorHueType = InRange<color::HueInteger::UnderlyingType, 0, 360>;
 constexpr ColorHueType kColorHueDef{120};
 
 CONFIG_VARIABLE(Enabled, bool, false);
 CONFIG_VARIABLE_RANGE(Count, kCountParams);
+CONFIG_VARIABLE_RANGE(LiveTime, kLiveTimeParams);
+CONFIG_VARIABLE_RANGE(SpawnRate, kSpawnRateParams);
 CONFIG_VARIABLE(Type, ParticleType, ParticleType::Star);
 CONFIG_VARIABLE(ColorHue, ColorHueType, kColorHueDef);
 

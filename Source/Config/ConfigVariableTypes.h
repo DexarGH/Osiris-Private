@@ -125,6 +125,8 @@ using ConfigVariableTypes = TypeList<
     rain_vars::ColorHue,
     tail_vars::Enabled,
     tail_vars::Count,
+    tail_vars::LiveTime,
+    tail_vars::SpawnRate,
     tail_vars::Type,
     tail_vars::ColorHue
 >;

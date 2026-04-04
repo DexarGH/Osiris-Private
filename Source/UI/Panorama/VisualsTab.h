@@ -348,7 +348,8 @@ private:
     {
         setDropDownSelectedIndex(mainMenu, "tail_enabled", !GET_CONFIG_VAR(tail_vars::Enabled));
         setDropDownSelectedIndex(mainMenu, "tail_particle", static_cast<int>(GET_CONFIG_VAR(tail_vars::Type)));
-        updateSlider<tail_vars::Count>(mainMenu, "tail_count");
+        updateSlider<tail_vars::LiveTime>(mainMenu, "tail_live_time");
+        updateSlider<tail_vars::SpawnRate>(mainMenu, "tail_spawn_rate");
         updateTailHueSlider(mainMenu, "tail_color_hue");
     }
 

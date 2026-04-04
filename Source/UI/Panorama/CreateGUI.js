@@ -841,7 +841,9 @@ u8R"(
   var tailSection = createSection(worldParticleTab, 'Tail');
   createYesNoDropDown(tailSection, "Enable", 'visuals', 'tail_enabled');
   separator(tailSection);
-  createSlider(tailSection, "Count", 'visuals', 'tail_count', 1, 500);
+  createSlider(tailSection, "Life Time", 'visuals', 'tail_live_time', 1, 60);
+  separator(tailSection);
+  createSlider(tailSection, "Spawn Rate", 'visuals', 'tail_spawn_rate', 0, 999);
   separator(tailSection);
   createDropDown(tailSection, "Particle", 'visuals', 'tail_particle', ['Star']);
   separator(tailSection);

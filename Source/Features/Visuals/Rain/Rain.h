@@ -34,7 +34,7 @@ static const char* getRainParticleSvgPath(rain_vars::ParticleType type) noexcept
 struct RainParticlePanel {
     [[nodiscard]] static float getScale(float z, float fovScale) noexcept
     {
-        return std::clamp(500.0f / (z / fovScale + 400.0f), 0.3f, 1.0f);
+        return std::clamp(500.0f / (z / fovScale + 400.0f), 0.1f, 1.0f);
     }
 
     [[nodiscard]] static float getOpacity(float timeAlive, float maxLife) noexcept
@@ -172,7 +172,10 @@ private:
 
             // Конвертируем в экранные координаты
             const auto clipSpace = hookContext.template make<WorldToClipSpaceConverter>().toClipSpace(particle.currentPos);
-            if (!clipSpace.onScreen()) {
+            
+            // Скрываем частицы за спиной (z <= 0) или слишком близко к камере
+            constexpr float minClipZ = 10.0f; // Минимальное расстояние от камеры
+            if (clipSpace.z < minClipZ || !clipSpace.onScreen()) {
                 hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle).setVisible(false);
                 continue;
             }
@@ -213,7 +216,6 @@ private:
         auto& state = getState();
         const auto targetCount = static_cast<std::uint16_t>(GET_CONFIG_VAR(rain_vars::Count));
         const float spawnRadius = static_cast<float>(GET_CONFIG_VAR(rain_vars::SpawnRadius));
-        const float skyHeight = 500.0f; // Высота спавна над игроком
         const auto curtime = hookContext.globalVars().curtime();
         if (!curtime.hasValue())
             return;
@@ -225,7 +227,8 @@ private:
                 // Случайная позиция в радиусе вокруг игрока
                 const float randomX = playerOrigin.x + (static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f) * spawnRadius;
                 const float randomY = playerOrigin.y + (static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f) * spawnRadius;
-                const float spawnZ = playerOrigin.z + skyHeight;
+                // Разнообразие высот: от +100 до +800 над игроком
+                const float spawnZ = playerOrigin.z + 100.0f + (static_cast<float>(std::rand()) / RAND_MAX * 700.0f);
 
                 particle.origin = cs2::Vector{randomX, randomY, spawnZ};
                 particle.currentPos = particle.origin;
@@ -242,7 +245,8 @@ private:
             auto& particle = state.particles[state.particleCount];
             const float randomX = playerOrigin.x + (static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f) * spawnRadius;
             const float randomY = playerOrigin.y + (static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f) * spawnRadius;
-            const float spawnZ = playerOrigin.z + skyHeight;
+            // Разнообразие высот: от +100 до +800 над игроком
+            const float spawnZ = playerOrigin.z + 100.0f + (static_cast<float>(std::rand()) / RAND_MAX * 700.0f);
 
             particle.origin = cs2::Vector{randomX, randomY, spawnZ};
             particle.currentPos = particle.origin;

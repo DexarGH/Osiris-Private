@@ -101,6 +101,14 @@ private:
             handleIntSlider<tail_vars::Count>("tail_count");
         } else if (feature == "tail_count_text") {
             handleIntSliderTextEntry<tail_vars::Count>("tail_count");
+        } else if (feature == "tail_live_time") {
+            handleIntSlider<tail_vars::LiveTime>("tail_live_time");
+        } else if (feature == "tail_live_time_text") {
+            handleIntSliderTextEntry<tail_vars::LiveTime>("tail_live_time");
+        } else if (feature == "tail_spawn_rate") {
+            handleIntSlider<tail_vars::SpawnRate>("tail_spawn_rate");
+        } else if (feature == "tail_spawn_rate_text") {
+            handleIntSliderTextEntry<tail_vars::SpawnRate>("tail_spawn_rate");
         } else if (feature == "tail_color_hue") {
             handleHueSlider<tail_vars::ColorHue>("tail_color_hue");
         } else if (feature == "tail_color_hue_text") {
