@@ -2,10 +2,12 @@
 
 #include "ModelGlow/ModelGlowState.h"
 #include "PlayerInfoInWorld/PlayerInfoInWorldState.h"
-#include "WorldParticle/WorldParticleState.h"
+#include "Rain/RainState.h"
+#include "Tail/TailState.h"
 
 struct VisualFeaturesStates {
     PlayerInfoInWorldState playerInfoInWorldState;
     ModelGlowState modelGlowState;
-    WorldParticleState worldParticleState;
+    RainState rainState;
+    TailState tailState;
 };

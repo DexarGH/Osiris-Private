@@ -2,7 +2,8 @@
 
 #include <Features/Visuals/ModelGlow/ModelGlowState.h>
 #include <Features/Visuals/PlayerInfoInWorld/PlayerStateIcons/PlayerStateIconsToShow.h>
-#include <Features/Visuals/WorldParticle/WorldParticleConfigVariables.h>
+#include <Features/Visuals/Rain/RainConfigVariables.h>
+#include <Features/Visuals/Tail/TailConfigVariables.h>
 #include <GameClient/Panorama/PanoramaDropDown.h>
 #include <GameClient/Panorama/Slider.h>
 #include <GameClient/Panorama/TextEntry.h>
@@ -11,7 +12,8 @@
 #include <EntryPoints/GuiEntryPoints.h>
 
 #include "Tabs/VisualsTab/IntSlider.h"
-#include "Tabs/VisualsTab/WorldParticleTypeDropdownSelectionChangeHandler.h"
+#include "Tabs/VisualsTab/RainParticleTypeDropdownSelectionChangeHandler.h"
+#include "Tabs/VisualsTab/TailParticleTypeDropdownSelectionChangeHandler.h"
 #include "Tabs/VisualsTab/PlayerInfoInWorldDropdownSelectionChangeHandler.h"
 #include "Tabs/VisualsTab/PlayerInfoInWorldPlayerHealthColorModeDropdownSelectionChangeHandler.h"
 #include "Tabs/VisualsTab/PlayerInfoInWorldPlayerPositionArrowColorModeDropdownSelectionChangeHandler.h"
@@ -19,8 +21,6 @@
 #include "Tabs/VisualsTab/PlayerModelGlowDropdownSelectionChangeHandler.h"
 #include "Tabs/VisualsTab/PlayerOutlineGlowColorModeDropdownSelectionChangeHandler.h"
 #include "Tabs/VisualsTab/PlayerOutlineGlowDropdownSelectionChangeHandler.h"
-#include "Tabs/VisualsTab/WorldParticleModeDropdownSelectionChangeHandler.h"
-#include "Tabs/VisualsTab/WorldParticleTypeDropdownSelectionChangeHandler.h"
 
 template <typename HookContext>
 class VisualsTab {
@@ -36,7 +36,8 @@ public:
         initModelGlowTab(guiPanel);
         initOutlineGlowTab(guiPanel);
         initViewmodelTab(guiPanel);
-        initWorldParticleTab(guiPanel);
+        initRainTab(guiPanel);
+        initTailTab(guiPanel);
     }
 
     void updateFromConfig(auto&& mainMenu) const noexcept
@@ -45,7 +46,8 @@ public:
         updateOutlineGlowTab(mainMenu);
         updateModelGlowTab(mainMenu);
         updateViewmodelTab(mainMenu);
-        updateWorldParticleTab(mainMenu);
+        updateRainTab(mainMenu);
+        updateTailTab(mainMenu);
     }
 
 private:
@@ -256,10 +258,20 @@ private:
         updateHueSlider(mainMenu, sliderId, GET_CONFIG_VAR(ConfigVariable));
     }
 
-    void updateWorldParticleHueSlider(auto&& mainMenu, const char* sliderId) const noexcept
+    void updateRainHueSlider(auto&& mainMenu, const char* sliderId) const noexcept
     {
         auto&& hueSlider = hookContext.template make<HueSlider>(mainMenu.findChildInLayoutFile(sliderId));
-        const auto hueValue = GET_CONFIG_VAR(world_particle_vars::ColorHue);
+        const auto hueValue = GET_CONFIG_VAR(rain_vars::ColorHue);
+        const auto hue = color::HueInteger{static_cast<std::uint16_t>(hueValue)};
+        hueSlider.updateSlider(hue);
+        hueSlider.updateTextEntry(hue);
+        hueSlider.updateColorPreview(hue);
+    }
+
+    void updateTailHueSlider(auto&& mainMenu, const char* sliderId) const noexcept
+    {
+        auto&& hueSlider = hookContext.template make<HueSlider>(mainMenu.findChildInLayoutFile(sliderId));
+        const auto hueValue = GET_CONFIG_VAR(tail_vars::ColorHue);
         const auto hue = color::HueInteger{static_cast<std::uint16_t>(hueValue)};
         hueSlider.updateSlider(hue);
         hueSlider.updateTextEntry(hue);
@@ -300,25 +312,40 @@ private:
         return 2;
     }
 
-    void initWorldParticleTab(auto&& guiPanel) const
+    void initRainTab(auto&& guiPanel) const
     {
-        initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, world_particle_vars::Enabled>>(guiPanel, "world_particle_enabled");
-        initDropDown<WorldParticleModeDropdownSelectionChangeHandler<HookContext>>(guiPanel, "world_particle_mode");
-        initDropDown<WorldParticleTypeDropdownSelectionChangeHandler<HookContext>>(guiPanel, "world_particle_type");
-        
-        // Регистрируем обработчики Hue слайдера
-        auto&& hueSlider = hookContext.template make<HueSlider>(guiPanel.findChildInLayoutFile("world_particle_color_hue"));
-        hueSlider.registerSliderValueChangedHandler(&GuiEntryPoints<HookContext>::worldParticleHueSliderValueChanged);
-        hueSlider.registerTextEntrySubmitHandler(&GuiEntryPoints<HookContext>::worldParticleHueSliderTextEntrySubmit);
+        initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, rain_vars::Enabled>>(guiPanel, "rain_enabled");
+        initDropDown<RainParticleTypeDropdownSelectionChangeHandler<HookContext>>(guiPanel, "rain_particle");
+
+        auto&& hueSlider = hookContext.template make<HueSlider>(guiPanel.findChildInLayoutFile("rain_color_hue"));
+        hueSlider.registerSliderValueChangedHandler(&GuiEntryPoints<HookContext>::rainHueSliderValueChanged);
+        hueSlider.registerTextEntrySubmitHandler(&GuiEntryPoints<HookContext>::rainHueSliderTextEntrySubmit);
     }
 
-    void updateWorldParticleTab(auto&& mainMenu) const noexcept
+    void updateRainTab(auto&& mainMenu) const noexcept
     {
-        setDropDownSelectedIndex(mainMenu, "world_particle_enabled", !GET_CONFIG_VAR(world_particle_vars::Enabled));
-        setDropDownSelectedIndex(mainMenu, "world_particle_mode", static_cast<int>(GET_CONFIG_VAR(world_particle_vars::ModeType)));
-        setDropDownSelectedIndex(mainMenu, "world_particle_type", static_cast<int>(GET_CONFIG_VAR(world_particle_vars::Type)));
-        updateSlider<world_particle_vars::Count>(mainMenu, "world_particle_count");
-        updateWorldParticleHueSlider(mainMenu, "world_particle_color_hue");
+        setDropDownSelectedIndex(mainMenu, "rain_enabled", !GET_CONFIG_VAR(rain_vars::Enabled));
+        setDropDownSelectedIndex(mainMenu, "rain_particle", static_cast<int>(GET_CONFIG_VAR(rain_vars::Type)));
+        updateSlider<rain_vars::Count>(mainMenu, "rain_count");
+        updateRainHueSlider(mainMenu, "rain_color_hue");
+    }
+
+    void initTailTab(auto&& guiPanel) const
+    {
+        initDropDown<OnOffDropdownSelectionChangeHandler<HookContext, tail_vars::Enabled>>(guiPanel, "tail_enabled");
+        initDropDown<TailParticleTypeDropdownSelectionChangeHandler<HookContext>>(guiPanel, "tail_particle");
+
+        auto&& hueSlider = hookContext.template make<HueSlider>(guiPanel.findChildInLayoutFile("tail_color_hue"));
+        hueSlider.registerSliderValueChangedHandler(&GuiEntryPoints<HookContext>::tailHueSliderValueChanged);
+        hueSlider.registerTextEntrySubmitHandler(&GuiEntryPoints<HookContext>::tailHueSliderTextEntrySubmit);
+    }
+
+    void updateTailTab(auto&& mainMenu) const noexcept
+    {
+        setDropDownSelectedIndex(mainMenu, "tail_enabled", !GET_CONFIG_VAR(tail_vars::Enabled));
+        setDropDownSelectedIndex(mainMenu, "tail_particle", static_cast<int>(GET_CONFIG_VAR(tail_vars::Type)));
+        updateSlider<tail_vars::Count>(mainMenu, "tail_count");
+        updateTailHueSlider(mainMenu, "tail_color_hue");
     }
 
     HookContext& hookContext;

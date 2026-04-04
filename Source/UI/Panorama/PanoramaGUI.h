@@ -3,8 +3,10 @@
 #include <charconv>
 
 #include <CS2/Panorama/CUIPanel.h>
-#include <Features/Visuals/WorldParticle/WorldParticle.h>
-#include <Features/Visuals/WorldParticle/WorldParticleConfigVariables.h>
+#include <Features/Visuals/Rain/Rain.h>
+#include <Features/Visuals/Rain/RainConfigVariables.h>
+#include <Features/Visuals/Tail/Tail.h>
+#include <Features/Visuals/Tail/TailConfigVariables.h>
 #include <GameClient/Entities/PreviewPlayer.h>
 #include <Features/Visuals/ModelGlow/Preview/PlayerModelGlowPreview.h>
 #include <Features/Visuals/ModelGlow/Preview/PlayerModelGlowPreviewColorMode.h>
@@ -176,31 +178,49 @@ public:
         hookContext.config().template setVariable<ConfigVariable>(typename ConfigVariable::ValueType{newVariableValue});
     }
 
-    void onWorldParticleHueSliderValueChanged(float value) const
+    // Rain Hue Slider Handlers
+    void onRainHueSliderValueChanged(float value) const
     {
-        const auto min = world_particle_vars::ColorHueType::kMin;
-        const auto max = world_particle_vars::ColorHueType::kMax;
-        const auto current = static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue));
-        const auto newValue = handleWorldParticleHueSlider("world_particle_color_hue", value, min, max, current);
-        hookContext.config().template setVariable<world_particle_vars::ColorHue>(world_particle_vars::ColorHueType{newValue});
-
-        // Пересоздаём все частицы с новым цветом
-        hookContext.template make<WorldParticle>().recreateAllParticles();
+        const auto min = rain_vars::ColorHueType::kMin;
+        const auto max = rain_vars::ColorHueType::kMax;
+        const auto current = static_cast<std::uint16_t>(GET_CONFIG_VAR(rain_vars::ColorHue));
+        const auto newValue = handleRainHueSlider("rain_color_hue", value, min, max, current);
+        hookContext.config().template setVariable<rain_vars::ColorHue>(rain_vars::ColorHueType{newValue});
+        hookContext.template make<Rain>().recreateAllParticles();
     }
 
-    void onWorldParticleHueSliderTextEntrySubmit(const char* value) const noexcept
+    void onRainHueSliderTextEntrySubmit(const char* value) const noexcept
     {
-        const auto min = world_particle_vars::ColorHueType::kMin;
-        const auto max = world_particle_vars::ColorHueType::kMax;
-        const auto current = static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue));
-        const auto newValue = handleWorldParticleHueTextEntry("world_particle_color_hue", value, min, max, current);
-        hookContext.config().template setVariable<world_particle_vars::ColorHue>(world_particle_vars::ColorHueType{newValue});
-
-        // Пересоздаём все частицы с новым цветом
-        hookContext.template make<WorldParticle>().recreateAllParticles();
+        const auto min = rain_vars::ColorHueType::kMin;
+        const auto max = rain_vars::ColorHueType::kMax;
+        const auto current = static_cast<std::uint16_t>(GET_CONFIG_VAR(rain_vars::ColorHue));
+        const auto newValue = handleRainHueTextEntry("rain_color_hue", value, min, max, current);
+        hookContext.config().template setVariable<rain_vars::ColorHue>(rain_vars::ColorHueType{newValue});
+        hookContext.template make<Rain>().recreateAllParticles();
     }
 
-    [[nodiscard]] std::uint16_t handleWorldParticleHueSlider(const char* sliderId, float value, std::uint16_t min, std::uint16_t max, std::uint16_t current) const noexcept
+    // Tail Hue Slider Handlers
+    void onTailHueSliderValueChanged(float value) const
+    {
+        const auto min = tail_vars::ColorHueType::kMin;
+        const auto max = tail_vars::ColorHueType::kMax;
+        const auto current = static_cast<std::uint16_t>(GET_CONFIG_VAR(tail_vars::ColorHue));
+        const auto newValue = handleTailHueSlider("tail_color_hue", value, min, max, current);
+        hookContext.config().template setVariable<tail_vars::ColorHue>(tail_vars::ColorHueType{newValue});
+        hookContext.template make<Tail>().recreateAllParticles();
+    }
+
+    void onTailHueSliderTextEntrySubmit(const char* value) const noexcept
+    {
+        const auto min = tail_vars::ColorHueType::kMin;
+        const auto max = tail_vars::ColorHueType::kMax;
+        const auto current = static_cast<std::uint16_t>(GET_CONFIG_VAR(tail_vars::ColorHue));
+        const auto newValue = handleTailHueTextEntry("tail_color_hue", value, min, max, current);
+        hookContext.config().template setVariable<tail_vars::ColorHue>(tail_vars::ColorHueType{newValue});
+        hookContext.template make<Tail>().recreateAllParticles();
+    }
+
+    [[nodiscard]] std::uint16_t handleRainHueSlider(const char* sliderId, float value, std::uint16_t min, std::uint16_t max, std::uint16_t current) const noexcept
     {
         auto&& hueSlider = getHueSlider(sliderId);
         const auto hue = static_cast<std::uint16_t>(value);
@@ -211,7 +231,32 @@ public:
         return hue;
     }
 
-    [[nodiscard]] std::uint16_t handleWorldParticleHueTextEntry(const char* sliderId, const char* value, std::uint16_t min, std::uint16_t max, std::uint16_t current) const noexcept
+    [[nodiscard]] std::uint16_t handleRainHueTextEntry(const char* sliderId, const char* value, std::uint16_t min, std::uint16_t max, std::uint16_t current) const noexcept
+    {
+        auto&& hueSlider = getHueSlider(sliderId);
+        std::uint16_t hue{};
+        if (std::from_chars(value, value + std::strlen(value), hue).ec != std::errc{} || hue < min || hue > max) {
+            hueSlider.updateTextEntry(color::HueInteger{current});
+            hueSlider.updateColorPreview(color::HueInteger{current});
+            return current;
+        }
+        hueSlider.updateTextEntry(color::HueInteger{hue});
+        hueSlider.updateColorPreview(color::HueInteger{hue});
+        return hue;
+    }
+
+    [[nodiscard]] std::uint16_t handleTailHueSlider(const char* sliderId, float value, std::uint16_t min, std::uint16_t max, std::uint16_t current) const noexcept
+    {
+        auto&& hueSlider = getHueSlider(sliderId);
+        const auto hue = static_cast<std::uint16_t>(value);
+        if (hue == current || hue < min || hue > max)
+            return current;
+        hueSlider.updateTextEntry(color::HueInteger{hue});
+        hueSlider.updateColorPreview(color::HueInteger{hue});
+        return hue;
+    }
+
+    [[nodiscard]] std::uint16_t handleTailHueTextEntry(const char* sliderId, const char* value, std::uint16_t min, std::uint16_t max, std::uint16_t current) const noexcept
     {
         auto&& hueSlider = getHueSlider(sliderId);
         std::uint16_t hue{};

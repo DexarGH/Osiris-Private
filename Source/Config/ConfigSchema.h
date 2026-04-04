@@ -185,12 +185,18 @@ private:
         configConversion.uint(u8"Fov", loadVariable<viewmodel_mod_vars::Fov>(), saveVariable<viewmodel_mod_vars::Fov>());
         configConversion.endObject();
 
-        configConversion.beginObject(u8"WorldParticle");
-        configConversion.boolean(u8"Enabled", loadVariable<world_particle_vars::Enabled>(), saveVariable<world_particle_vars::Enabled>());
-        configConversion.uint(u8"Count", loadVariable<world_particle_vars::Count>(), saveVariable<world_particle_vars::Count>());
-        configConversion.uint(u8"Mode", loadVariable<world_particle_vars::ModeType>(), saveVariable<world_particle_vars::ModeType>());
-        configConversion.uint(u8"Type", loadVariable<world_particle_vars::Type>(), saveVariable<world_particle_vars::Type>());
-        configConversion.uint(u8"ColorHue", loadVariable<world_particle_vars::ColorHue>(), saveVariable<world_particle_vars::ColorHue>());
+        configConversion.beginObject(u8"Rain");
+        configConversion.boolean(u8"Enabled", loadVariable<rain_vars::Enabled>(), saveVariable<rain_vars::Enabled>());
+        configConversion.uint(u8"Count", loadVariable<rain_vars::Count>(), saveVariable<rain_vars::Count>());
+        configConversion.uint(u8"Type", loadVariable<rain_vars::Type>(), saveVariable<rain_vars::Type>());
+        configConversion.uint(u8"ColorHue", loadVariable<rain_vars::ColorHue>(), saveVariable<rain_vars::ColorHue>());
+        configConversion.endObject();
+
+        configConversion.beginObject(u8"Tail");
+        configConversion.boolean(u8"Enabled", loadVariable<tail_vars::Enabled>(), saveVariable<tail_vars::Enabled>());
+        configConversion.uint(u8"Count", loadVariable<tail_vars::Count>(), saveVariable<tail_vars::Count>());
+        configConversion.uint(u8"Type", loadVariable<tail_vars::Type>(), saveVariable<tail_vars::Type>());
+        configConversion.uint(u8"ColorHue", loadVariable<tail_vars::ColorHue>(), saveVariable<tail_vars::ColorHue>());
         configConversion.endObject();
 
         configConversion.endObject();

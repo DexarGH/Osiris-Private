@@ -5,6 +5,8 @@
 #include <Features/Aimbot/AimbotConfigVariables.h>
 #include <Features/Combat/SniperRifles/NoScopeInaccuracyVis/NoScopeInaccuracyVisConfigVariables.h>
 #include <Features/Hud/FovCircle/FovCircleConfigVariables.h>
+#include <Features/Visuals/Rain/RainConfigVariables.h>
+#include <Features/Visuals/Tail/TailConfigVariables.h>
 #include <Features/Visuals/PlayerInfoInWorld/PlayerInfoInWorld.h>
 #include <GameClient/Panorama/Slider.h>
 #include <GameClient/Panorama/TextEntry.h>
@@ -71,14 +73,22 @@ private:
             handleIntSlider<viewmodel_mod_vars::Fov>("viewmodel_fov");
         } else if (feature == "viewmodel_fov_text") {
             handleIntSliderTextEntry<viewmodel_mod_vars::Fov>("viewmodel_fov");
-        } else if (feature == "world_particle_count") {
-            handleIntSlider<world_particle_vars::Count>("world_particle_count");
-        } else if (feature == "world_particle_count_text") {
-            handleIntSliderTextEntry<world_particle_vars::Count>("world_particle_count");
-        } else if (feature == "world_particle_color_hue") {
-            handleWorldParticleHueSlider("world_particle_color_hue");
-        } else if (feature == "world_particle_color_hue_text") {
-            handleWorldParticleHueSliderTextEntry("world_particle_color_hue");
+        } else if (feature == "rain_count") {
+            handleIntSlider<rain_vars::Count>("rain_count");
+        } else if (feature == "rain_count_text") {
+            handleIntSliderTextEntry<rain_vars::Count>("rain_count");
+        } else if (feature == "rain_color_hue") {
+            handleHueSlider<rain_vars::ColorHue>("rain_color_hue");
+        } else if (feature == "rain_color_hue_text") {
+            handleHueSliderTextEntry<rain_vars::ColorHue>("rain_color_hue");
+        } else if (feature == "tail_count") {
+            handleIntSlider<tail_vars::Count>("tail_count");
+        } else if (feature == "tail_count_text") {
+            handleIntSliderTextEntry<tail_vars::Count>("tail_count");
+        } else if (feature == "tail_color_hue") {
+            handleHueSlider<tail_vars::ColorHue>("tail_color_hue");
+        } else if (feature == "tail_color_hue_text") {
+            handleHueSliderTextEntry<tail_vars::ColorHue>("tail_color_hue");
         }
     }
 
@@ -135,26 +145,6 @@ private:
         const auto mainMenuPointer = hookContext.patternSearchResults().template get<MainMenuPanelPointer>();
         auto&& mainMenu = hookContext.template make<ClientPanel>(mainMenuPointer ? *mainMenuPointer : nullptr).uiPanel();
         return hookContext.template make<IntSlider>(mainMenu.findChildInLayoutFile(sliderId));
-    }
-
-    void handleWorldParticleHueSlider(const char* sliderId) const noexcept
-    {
-        const auto newVariableValue = handleIntSlider(sliderId, world_particle_vars::ColorHueType::kMin, world_particle_vars::ColorHueType::kMax, static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue)));
-        hookContext.config().template setVariable<world_particle_vars::ColorHue>(world_particle_vars::ColorHueType{newVariableValue});
-
-        auto&& slider = getHueSlider(sliderId);
-        slider.updateTextEntry(color::HueInteger{newVariableValue});
-        slider.updateColorPreview(color::HueInteger{newVariableValue});
-    }
-
-    void handleWorldParticleHueSliderTextEntry(const char* sliderId) const noexcept
-    {
-        const auto newVariableValue = handleIntSliderTextEntry(sliderId, world_particle_vars::ColorHueType::kMin, world_particle_vars::ColorHueType::kMax, static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue)));
-        hookContext.config().template setVariable<world_particle_vars::ColorHue>(world_particle_vars::ColorHueType{newVariableValue});
-
-        auto&& slider = getHueSlider(sliderId);
-        slider.updateTextEntry(color::HueInteger{newVariableValue});
-        slider.updateColorPreview(color::HueInteger{newVariableValue});
     }
 
     template <typename ConfigVariable>

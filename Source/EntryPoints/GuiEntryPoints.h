@@ -31,17 +31,33 @@ public:
         return true;
     }
 
-    LINUX_ONLY([[gnu::aligned(8)]]) static bool worldParticleHueSliderValueChanged(void* /* thisptr */, cs2::CPanel2D* /* panel */, float value)
+    // Rain Hue Slider Handlers
+    LINUX_ONLY([[gnu::aligned(8)]]) static bool rainHueSliderValueChanged(void* /* thisptr */, cs2::CPanel2D* /* panel */, float value)
     {
         HookContext hookContext;
-        hookContext.gui().onWorldParticleHueSliderValueChanged(value);
+        hookContext.gui().onRainHueSliderValueChanged(value);
         return true;
     }
 
-    LINUX_ONLY([[gnu::aligned(8)]]) static bool worldParticleHueSliderTextEntrySubmit(void* /* thisptr */, cs2::CPanel2D* /* panel */, const char* value)
+    LINUX_ONLY([[gnu::aligned(8)]]) static bool rainHueSliderTextEntrySubmit(void* /* thisptr */, cs2::CPanel2D* /* panel */, const char* value)
     {
         HookContext hookContext;
-        hookContext.gui().onWorldParticleHueSliderTextEntrySubmit(value);
+        hookContext.gui().onRainHueSliderTextEntrySubmit(value);
+        return true;
+    }
+
+    // Tail Hue Slider Handlers
+    LINUX_ONLY([[gnu::aligned(8)]]) static bool tailHueSliderValueChanged(void* /* thisptr */, cs2::CPanel2D* /* panel */, float value)
+    {
+        HookContext hookContext;
+        hookContext.gui().onTailHueSliderValueChanged(value);
+        return true;
+    }
+
+    LINUX_ONLY([[gnu::aligned(8)]]) static bool tailHueSliderTextEntrySubmit(void* /* thisptr */, cs2::CPanel2D* /* panel */, const char* value)
+    {
+        HookContext hookContext;
+        hookContext.gui().onTailHueSliderTextEntrySubmit(value);
         return true;
     }
 };

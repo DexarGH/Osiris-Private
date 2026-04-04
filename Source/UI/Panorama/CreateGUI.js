@@ -821,16 +821,23 @@ u8R"(
   createSlider(viewmodelFov, "Fov", 'visuals', 'viewmodel_fov', 40, 90);
 
   var worldParticleTab = createSubTab(visuals, 'world_particle');
-  var worldParticle = createSection(worldParticleTab, 'World Particle');
-  createYesNoDropDown(worldParticle, "Enable", 'visuals', 'world_particle_enabled');
-  separator(worldParticle);
-  createSlider(worldParticle, "Count", 'visuals', 'world_particle_count', 1, 500);
-  separator(worldParticle);
-  createDropDown(worldParticle, "Mode", 'visuals', 'world_particle_mode', ['Rain', 'Tail']);
-  separator(worldParticle);
-  createDropDown(worldParticle, "Particle", 'visuals', 'world_particle_type', ['Star']);
-  separator(worldParticle);
-  createHueSlider(worldParticle, "Color", 'world_particle_color_hue', 0, 360);
+  var rainSection = createSection(worldParticleTab, 'Rain');
+  createYesNoDropDown(rainSection, "Enable", 'visuals', 'rain_enabled');
+  separator(rainSection);
+  createSlider(rainSection, "Count", 'visuals', 'rain_count', 1, 500);
+  separator(rainSection);
+  createDropDown(rainSection, "Particle", 'visuals', 'rain_particle', ['Star']);
+  separator(rainSection);
+  createHueSlider(rainSection, "Color", 'rain_color_hue', 0, 360);
+
+  var tailSection = createSection(worldParticleTab, 'Tail');
+  createYesNoDropDown(tailSection, "Enable", 'visuals', 'tail_enabled');
+  separator(tailSection);
+  createSlider(tailSection, "Count", 'visuals', 'tail_count', 1, 500);
+  separator(tailSection);
+  createDropDown(tailSection, "Particle", 'visuals', 'tail_particle', ['Star']);
+  separator(tailSection);
+  createHueSlider(tailSection, "Color", 'tail_color_hue', 0, 360);
 
   $.Osiris.navigateToSubTab('visuals', 'player_info');
 

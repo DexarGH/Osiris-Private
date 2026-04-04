@@ -13,7 +13,8 @@
 #include <Features/Visuals/OutlineGlow/OutlineGlowConfigVariables.h>
 #include <Features/Visuals/PlayerInfoInWorld/PlayerInfoInWorldConfigVariables.h>
 #include <Features/Visuals/ViewmodelMod/ViewmodelModConfigVariables.h>
-#include <Features/Visuals/WorldParticle/WorldParticleConfigVariables.h>
+#include <Features/Visuals/Rain/RainConfigVariables.h>
+#include <Features/Visuals/Tail/TailConfigVariables.h>
 #include <Utils/TypeList.h>
 
 using ConfigVariableTypes = TypeList<
@@ -114,9 +115,12 @@ using ConfigVariableTypes = TypeList<
     fov_circle_vars::Enabled,
     fov_circle_vars::Thickness,
     fov_circle_vars::Color,
-    world_particle_vars::Enabled,
-    world_particle_vars::Count,
-    world_particle_vars::ModeType,
-    world_particle_vars::Type,
-    world_particle_vars::ColorHue
+    rain_vars::Enabled,
+    rain_vars::Count,
+    rain_vars::Type,
+    rain_vars::ColorHue,
+    tail_vars::Enabled,
+    tail_vars::Count,
+    tail_vars::Type,
+    tail_vars::ColorHue
 >;
