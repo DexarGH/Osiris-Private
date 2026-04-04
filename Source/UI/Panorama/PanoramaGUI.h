@@ -184,8 +184,8 @@ public:
         const auto newValue = handleWorldParticleHueSlider("world_particle_color_hue", value, min, max, current);
         hookContext.config().template setVariable<world_particle_vars::ColorHue>(world_particle_vars::ColorHueType{newValue});
 
-        // Обновляем цвет всех существующих частиц
-        hookContext.template make<WorldParticle>().updateParticleColors();
+        // Пересоздаём все частицы с новым цветом
+        hookContext.template make<WorldParticle>().recreateAllParticles();
     }
 
     void onWorldParticleHueSliderTextEntrySubmit(const char* value) const noexcept
@@ -195,6 +195,9 @@ public:
         const auto current = static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue));
         const auto newValue = handleWorldParticleHueTextEntry("world_particle_color_hue", value, min, max, current);
         hookContext.config().template setVariable<world_particle_vars::ColorHue>(world_particle_vars::ColorHueType{newValue});
+
+        // Пересоздаём все частицы с новым цветом
+        hookContext.template make<WorldParticle>().recreateAllParticles();
     }
 
     [[nodiscard]] std::uint16_t handleWorldParticleHueSlider(const char* sliderId, float value, std::uint16_t min, std::uint16_t max, std::uint16_t current) const noexcept

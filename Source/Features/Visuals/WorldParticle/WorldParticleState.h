@@ -7,6 +7,7 @@
 
 struct ParticleData {
     cs2::PanelHandle panelHandle{};
+    cs2::PanelHandle imagePanelHandle{};
     cs2::Vector origin{};
     float spawnTime{0.0f};
     float maxLife{2.0f};

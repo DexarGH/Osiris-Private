@@ -82,6 +82,10 @@ public:
         if (state.lastParticleType != GET_CONFIG_VAR(world_particle_vars::Type)) {
             state.lastParticleType = GET_CONFIG_VAR(world_particle_vars::Type);
             for (auto& particle : state.particles) {
+                if (particle.imagePanelHandle.isValid()) {
+                    hookContext.template make<PanoramaUiEngine>().deletePanelByHandle(particle.imagePanelHandle);
+                    particle.imagePanelHandle = {};
+                }
                 if (particle.panelHandle.isValid()) {
                     hookContext.template make<PanoramaUiEngine>().deletePanelByHandle(particle.panelHandle);
                     particle.panelHandle = {};
@@ -125,10 +129,49 @@ public:
     {
         auto& state = getState();
         for (auto& particle : state.particles) {
+            if (particle.imagePanelHandle.isValid())
+                hookContext.template make<PanoramaUiEngine>().deletePanelByHandle(particle.imagePanelHandle);
             if (particle.panelHandle.isValid())
                 hookContext.template make<PanoramaUiEngine>().deletePanelByHandle(particle.panelHandle);
         }
         hookContext.template make<PanoramaUiEngine>().deletePanelByHandle(state.containerPanelHandle);
+    }
+
+    void updateParticleColors() const
+    {
+        auto& state = getState();
+        const auto particleColor = color::HSBtoRGB(
+            color::HueInteger{static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue))},
+            color::Saturation{0.7f},
+            color::Brightness{0.9f}
+        );
+
+        for (std::uint16_t i = 0; i < state.particleCount; ++i) {
+            auto& particle = state.particles[i];
+            if (particle.imagePanelHandle.isValid() && particle.active) {
+                auto&& panel = hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.imagePanelHandle);
+                panel.setWashColor(particleColor);
+            }
+        }
+    }
+
+    void recreateAllParticles() const
+    {
+        auto& state = getState();
+        
+        // Удаляем все существующие частицы
+        for (auto& particle : state.particles) {
+            if (particle.imagePanelHandle.isValid()) {
+                hookContext.template make<PanoramaUiEngine>().deletePanelByHandle(particle.imagePanelHandle);
+                particle.imagePanelHandle = {};
+            }
+            if (particle.panelHandle.isValid()) {
+                hookContext.template make<PanoramaUiEngine>().deletePanelByHandle(particle.panelHandle);
+                particle.panelHandle = {};
+            }
+            particle.active = false;
+        }
+        state.particleCount = 0;
     }
 
 private:
@@ -218,34 +261,7 @@ private:
         });
 
         particle.panelHandle = panel.getHandle();
-    }
-
-    void updateParticleColors() const
-    {
-        auto& state = getState();
-        const auto particleColor = color::HSBtoRGB(
-            color::HueInteger{static_cast<std::uint16_t>(GET_CONFIG_VAR(world_particle_vars::ColorHue))},
-            color::Saturation{0.7f},
-            color::Brightness{0.9f}
-        );
-
-        for (std::uint16_t i = 0; i < state.particleCount; ++i) {
-            auto& particle = state.particles[i];
-            if (particle.panelHandle.isValid() && particle.active) {
-                auto&& panel = hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle);
-                panel.setWashColor(particleColor);
-            }
-        }
-    }
-
-private:
-    void hideAll() const
-    {
-        auto& state = getState();
-        for (auto& particle : state.particles) {
-            if (particle.panelHandle.isValid())
-                hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle).setVisible(false);
-        }
+        particle.imagePanelHandle = uiPanel.getHandle();
     }
 
     void ensureContainer() const
