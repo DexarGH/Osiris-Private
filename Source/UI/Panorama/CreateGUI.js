@@ -824,7 +824,7 @@ u8R"(
   var worldParticle = createSection(worldParticleTab, 'World Particle');
   createYesNoDropDown(worldParticle, "Enable", 'visuals', 'world_particle_enabled');
   separator(worldParticle);
-  createSlider(worldParticle, "Count", 'visuals', 'world_particle_count', 1, 200);
+  createSlider(worldParticle, "Count", 'visuals', 'world_particle_count', 1, 500);
   separator(worldParticle);
   createDropDown(worldParticle, "Mode", 'visuals', 'world_particle_mode', ['Rain', 'Tail']);
   separator(worldParticle);

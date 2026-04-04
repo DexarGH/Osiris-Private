@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 #include <CS2/Panorama/CUILength.h>
 #include <CS2/Panorama/CUIPanel.h>
 #include <CS2/Panorama/StyleEnums.h>
@@ -14,6 +16,46 @@
 #include <Utils/Lvalue.h>
 #include "WorldParticleConfigVariables.h"
 #include "WorldParticleState.h"
+
+#ifdef __linux__
+#include <dlfcn.h>
+#include <linux/limits.h>
+#endif
+
+static const char* getParticleSvgPath(world_particle_vars::ParticleType type) noexcept
+{
+    const char* svgFile = nullptr;
+    switch (type) {
+        case world_particle_vars::ParticleType::Star:   svgFile = "star.svg"; break;
+        case world_particle_vars::ParticleType::Snow:   svgFile = "snow.svg"; break;
+        case world_particle_vars::ParticleType::Bloom:  svgFile = "bloom.svg"; break;
+        case world_particle_vars::ParticleType::Dollar: svgFile = "dollar.svg"; break;
+        default: svgFile = "stomp_damage.svg"; break;
+    }
+    
+    if (__builtin_strcmp(svgFile, "stomp_damage.svg") == 0)
+        return "s2r://panorama/images/icons/equipment/stomp_damage.svg";
+    
+    static char svgPathBuffer[PATH_MAX];
+#ifdef __linux__
+    Dl_info info;
+    if (dladdr((void*)&getParticleSvgPath, &info) && info.dli_fname) {
+        const char* lastSlash = __builtin_strrchr(info.dli_fname, '/');
+        if (lastSlash) {
+            int dirLen = lastSlash - info.dli_fname;
+            __builtin_memcpy(svgPathBuffer, info.dli_fname, dirLen);
+            svgPathBuffer[dirLen] = '\0';
+            __builtin_strcat(svgPathBuffer, "/Resources/");
+            __builtin_strcat(svgPathBuffer, svgFile);
+            return svgPathBuffer;
+        }
+    }
+#endif
+    
+    __builtin_strcpy(svgPathBuffer, "Resources/");
+    __builtin_strcat(svgPathBuffer, svgFile);
+    return svgPathBuffer;
+}
 
 struct WorldParticlePanel {
     [[nodiscard]] static float getScale(float z, float fovScale) noexcept
@@ -162,7 +204,8 @@ private:
         panel.setVisible(false);
 
         auto&& imagePanel = hookContext.panelFactory().createImagePanel(panel);
-        imagePanel.setImageSvg("s2r://panorama/images/icons/equipment/stomp_damage.svg", 64);
+        const auto particleType = GET_CONFIG_VAR(world_particle_vars::Type);
+        imagePanel.setImageSvg(getParticleSvgPath(particleType), 64);
 
         auto&& uiPanel = imagePanel.uiPanel();
         uiPanel.setAlign(PanelAlignmentParams{cs2::k_EHorizontalAlignmentCenter, cs2::k_EVerticalAlignmentBottom});

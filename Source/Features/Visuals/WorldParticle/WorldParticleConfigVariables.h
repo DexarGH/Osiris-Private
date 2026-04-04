@@ -22,7 +22,7 @@ enum class ParticleType : std::uint8_t {
 
 constexpr auto kCountParams = RangeConstrainedVariableParams<std::uint16_t>{
     .min = 1,
-    .max = 200,
+    .max = 500,
     .def = 50
 };
 
