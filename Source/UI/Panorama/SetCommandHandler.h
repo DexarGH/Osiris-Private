@@ -127,15 +127,11 @@ private:
             slider.updateTextEntry(current);
             return current;
         }
-
-        if (value == current)
-            return current;
-
-        slider.updateSlider(value);
+        slider.updateTextEntry(value);
         return value;
     }
 
-    [[nodiscard]] decltype(auto) getIntSlider(const char* sliderId) const noexcept
+    [[nodiscard]] auto getIntSlider(const char* sliderId) const noexcept
     {
         const auto mainMenuPointer = hookContext.patternSearchResults().template get<MainMenuPanelPointer>();
         auto&& mainMenu = hookContext.template make<ClientPanel>(mainMenuPointer ? *mainMenuPointer : nullptr).uiPanel();

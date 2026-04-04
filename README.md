@@ -11,7 +11,7 @@ All rights belong to the original Osiris developer (https://github.com/danielkru
 
 ## What's new
 * 4 April 2026
-    * Added World Particle
+    * Added World Particle (dont work, need fix)
     
 * 3 April 2026
     * Change Aim Bot setting

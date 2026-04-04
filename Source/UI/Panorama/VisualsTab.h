@@ -9,6 +9,7 @@
 #include <Platform/Macros/FunctionAttributes.h>
 #include <EntryPoints/GuiEntryPoints.h>
 
+#include "Tabs/VisualsTab/IntSlider.h"
 #include "Tabs/VisualsTab/PlayerInfoInWorldDropdownSelectionChangeHandler.h"
 #include "Tabs/VisualsTab/PlayerInfoInWorldPlayerHealthColorModeDropdownSelectionChangeHandler.h"
 #include "Tabs/VisualsTab/PlayerInfoInWorldPlayerPositionArrowColorModeDropdownSelectionChangeHandler.h"

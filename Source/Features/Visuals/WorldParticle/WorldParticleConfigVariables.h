@@ -21,9 +21,9 @@ enum class ParticleType : std::uint8_t {
 };
 
 constexpr auto kCountParams = RangeConstrainedVariableParams<std::uint16_t>{
-    .min = 10,
-    .max = 1000,
-    .def = 100
+    .min = 1,
+    .max = 200,
+    .def = 50
 };
 
 constexpr auto kColorRParams = RangeConstrainedVariableParams<std::uint16_t>{
@@ -46,7 +46,7 @@ constexpr auto kColorBParams = RangeConstrainedVariableParams<std::uint16_t>{
 
 CONFIG_VARIABLE(Enabled, bool, false);
 CONFIG_VARIABLE_RANGE(Count, kCountParams);
-CONFIG_VARIABLE(ModeType, Mode, Mode::Rain);
+CONFIG_VARIABLE(ModeType, Mode, Mode::Tail);
 CONFIG_VARIABLE(Type, ParticleType, ParticleType::Snow);
 CONFIG_VARIABLE_RANGE(ColorR, kColorRParams);
 CONFIG_VARIABLE_RANGE(ColorG, kColorGParams);
