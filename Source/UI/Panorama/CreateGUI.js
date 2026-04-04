@@ -826,6 +826,14 @@ u8R"(
   separator(rainSection);
   createSlider(rainSection, "Count", 'visuals', 'rain_count', 1, 500);
   separator(rainSection);
+  createSlider(rainSection, "Spawn Radius", 'visuals', 'rain_spawn_radius', 100, 2000);
+  separator(rainSection);
+  createSlider(rainSection, "Tilt Angle", 'visuals', 'rain_tilt_angle', 0, 90);
+  separator(rainSection);
+  createSlider(rainSection, "Speed", 'visuals', 'rain_speed', 1, 500);
+  separator(rainSection);
+  createSlider(rainSection, "Live Time", 'visuals', 'rain_live_time', 1, 20);
+  separator(rainSection);
   createDropDown(rainSection, "Particle", 'visuals', 'rain_particle', ['Star']);
   separator(rainSection);
   createHueSlider(rainSection, "Color", 'rain_color_hue', 0, 360);

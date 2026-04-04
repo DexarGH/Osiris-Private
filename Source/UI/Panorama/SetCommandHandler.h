@@ -77,6 +77,22 @@ private:
             handleIntSlider<rain_vars::Count>("rain_count");
         } else if (feature == "rain_count_text") {
             handleIntSliderTextEntry<rain_vars::Count>("rain_count");
+        } else if (feature == "rain_spawn_radius") {
+            handleIntSlider<rain_vars::SpawnRadius>("rain_spawn_radius");
+        } else if (feature == "rain_spawn_radius_text") {
+            handleIntSliderTextEntry<rain_vars::SpawnRadius>("rain_spawn_radius");
+        } else if (feature == "rain_tilt_angle") {
+            handleIntSlider<rain_vars::TiltAngle>("rain_tilt_angle");
+        } else if (feature == "rain_tilt_angle_text") {
+            handleIntSliderTextEntry<rain_vars::TiltAngle>("rain_tilt_angle");
+        } else if (feature == "rain_speed") {
+            handleIntSlider<rain_vars::Speed>("rain_speed");
+        } else if (feature == "rain_speed_text") {
+            handleIntSliderTextEntry<rain_vars::Speed>("rain_speed");
+        } else if (feature == "rain_live_time") {
+            handleIntSlider<rain_vars::LiveTime>("rain_live_time");
+        } else if (feature == "rain_live_time_text") {
+            handleIntSliderTextEntry<rain_vars::LiveTime>("rain_live_time");
         } else if (feature == "rain_color_hue") {
             handleHueSlider<rain_vars::ColorHue>("rain_color_hue");
         } else if (feature == "rain_color_hue_text") {

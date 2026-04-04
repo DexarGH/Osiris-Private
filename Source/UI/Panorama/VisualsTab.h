@@ -327,6 +327,10 @@ private:
         setDropDownSelectedIndex(mainMenu, "rain_enabled", !GET_CONFIG_VAR(rain_vars::Enabled));
         setDropDownSelectedIndex(mainMenu, "rain_particle", static_cast<int>(GET_CONFIG_VAR(rain_vars::Type)));
         updateSlider<rain_vars::Count>(mainMenu, "rain_count");
+        updateSlider<rain_vars::SpawnRadius>(mainMenu, "rain_spawn_radius");
+        updateSlider<rain_vars::TiltAngle>(mainMenu, "rain_tilt_angle");
+        updateSlider<rain_vars::Speed>(mainMenu, "rain_speed");
+        updateSlider<rain_vars::LiveTime>(mainMenu, "rain_live_time");
         updateRainHueSlider(mainMenu, "rain_color_hue");
     }
 

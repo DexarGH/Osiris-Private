@@ -12,10 +12,6 @@ struct RainState {
     bool containerValid{false};
     std::uint16_t particleCount{0};
 
-    float lastPlayerX{0.0f};
-    float lastPlayerY{0.0f};
-    float lastPlayerZ{0.0f};
-    bool lastPosInitialized{false};
-
+    float lastSpawnTime{0.0f};
     rain_vars::ParticleType lastParticleType{rain_vars::ParticleType::Star};
 };

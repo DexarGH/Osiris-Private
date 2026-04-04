@@ -188,6 +188,10 @@ private:
         configConversion.beginObject(u8"Rain");
         configConversion.boolean(u8"Enabled", loadVariable<rain_vars::Enabled>(), saveVariable<rain_vars::Enabled>());
         configConversion.uint(u8"Count", loadVariable<rain_vars::Count>(), saveVariable<rain_vars::Count>());
+        configConversion.uint(u8"SpawnRadius", loadVariable<rain_vars::SpawnRadius>(), saveVariable<rain_vars::SpawnRadius>());
+        configConversion.uint(u8"TiltAngle", loadVariable<rain_vars::TiltAngle>(), saveVariable<rain_vars::TiltAngle>());
+        configConversion.uint(u8"Speed", loadVariable<rain_vars::Speed>(), saveVariable<rain_vars::Speed>());
+        configConversion.uint(u8"LiveTime", loadVariable<rain_vars::LiveTime>(), saveVariable<rain_vars::LiveTime>());
         configConversion.uint(u8"Type", loadVariable<rain_vars::Type>(), saveVariable<rain_vars::Type>());
         configConversion.uint(u8"ColorHue", loadVariable<rain_vars::ColorHue>(), saveVariable<rain_vars::ColorHue>());
         configConversion.endObject();

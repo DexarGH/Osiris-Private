@@ -23,7 +23,7 @@
 #include "RainConfigVariables.h"
 #include "RainState.h"
 
-static const char* getParticleSvgPath(rain_vars::ParticleType type) noexcept
+static const char* getRainParticleSvgPath(rain_vars::ParticleType type) noexcept
 {
     switch (type) {
         case rain_vars::ParticleType::Star: return "s2r://panorama/images/icons/ui/star.svg";
@@ -74,6 +74,8 @@ public:
         }
 
         auto& state = getState();
+
+        // Проверяем смену типа частиц
         if (state.lastParticleType != GET_CONFIG_VAR(rain_vars::Type)) {
             state.lastParticleType = GET_CONFIG_VAR(rain_vars::Type);
             for (auto& particle : state.particles) {
@@ -90,29 +92,8 @@ public:
             state.particleCount = 0;
         }
 
-        if (!state.lastPosInitialized) {
-            state.lastPlayerX = origin.value().x;
-            state.lastPlayerY = origin.value().y;
-            state.lastPlayerZ = origin.value().z;
-            state.lastPosInitialized = true;
-        }
-
-        const float deltaX = origin.value().x - state.lastPlayerX;
-        const float deltaY = origin.value().y - state.lastPlayerY;
-        const float deltaZ = origin.value().z - state.lastPlayerZ;
-        const float movementSpeed = std::sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
-
-        state.lastPlayerX = origin.value().x;
-        state.lastPlayerY = origin.value().y;
-        state.lastPlayerZ = origin.value().z;
-
-        if (movementSpeed < 0.05f) {
-            updateActiveParticles();
-            return;
-        }
-
-        spawnParticle(origin.value());
-        updateActiveParticles();
+        // Обновляем падающие частицы
+        updateFallingParticles(origin.value());
     }
 
     void onUnload() const
@@ -155,29 +136,117 @@ private:
         }
     }
 
-    void spawnParticle(const cs2::Vector& origin) const
+    void updateFallingParticles(const cs2::Vector& playerOrigin) const
+    {
+        auto& state = getState();
+        const auto curtime = hookContext.globalVars().curtime();
+        if (!curtime.hasValue())
+            return;
+
+        const float deltaTime = 0.016f; // ~60 FPS
+        const float speed = static_cast<float>(GET_CONFIG_VAR(rain_vars::Speed));
+        const float tiltAngle = static_cast<float>(GET_CONFIG_VAR(rain_vars::TiltAngle));
+        const float tiltRad = tiltAngle * 3.14159265f / 180.0f;
+        const float liveTime = static_cast<float>(GET_CONFIG_VAR(rain_vars::LiveTime));
+        
+        // Обновляем позиции и проверяем время жизни
+        for (std::uint16_t i = 0; i < state.particleCount; ++i) {
+            auto& particle = state.particles[i];
+            if (!particle.active || !particle.panelHandle.isValid())
+                continue;
+
+            // Двигаем частицу вниз
+            particle.currentPos.z -= speed * deltaTime;
+            // Наклон по X
+            particle.currentPos.x += speed * std::sin(tiltRad) * deltaTime;
+
+            const float timeAlive = curtime.value() - particle.spawnTime;
+
+            // Проверяем время жизни
+            if (timeAlive >= liveTime) {
+                // Время жизни вышло - деактивируем
+                particle.active = false;
+                hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle).setVisible(false);
+                continue;
+            }
+
+            // Конвертируем в экранные координаты
+            const auto clipSpace = hookContext.template make<WorldToClipSpaceConverter>().toClipSpace(particle.currentPos);
+            if (!clipSpace.onScreen()) {
+                hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle).setVisible(false);
+                continue;
+            }
+
+            auto&& panel = hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle);
+
+            const float fovScale = ViewToProjectionMatrix{hookContext}.getFovScale();
+            const float scale = RainParticlePanel::getScale(clipSpace.z, fovScale);
+            
+            // Прозрачность на основе времени жизни
+            const float lifeRatio = timeAlive / liveTime;
+            const float opacity = 1.0f - lifeRatio;
+
+            if (opacity <= 0.0f) {
+                particle.active = false;
+                panel.setVisible(false);
+                continue;
+            }
+
+            const auto deviceCoordinates = clipSpace.toNormalizedDeviceCoordinates();
+
+            PanoramaTransformations{
+                hookContext.panoramaTransformFactory().scale(scale),
+                hookContext.panoramaTransformFactory().translate(deviceCoordinates.getX(), deviceCoordinates.getY())
+            }.applyTo(panel);
+
+            panel.setOpacity(opacity);
+            panel.setZIndex(-clipSpace.z);
+            panel.setVisible(true);
+        }
+
+        // Спавним новые частицы вместо деактивированных
+        spawnRainParticles(playerOrigin);
+    }
+
+    void spawnRainParticles(const cs2::Vector& playerOrigin) const
     {
         auto& state = getState();
         const auto targetCount = static_cast<std::uint16_t>(GET_CONFIG_VAR(rain_vars::Count));
+        const float spawnRadius = static_cast<float>(GET_CONFIG_VAR(rain_vars::SpawnRadius));
+        const float skyHeight = 500.0f; // Высота спавна над игроком
+        const auto curtime = hookContext.globalVars().curtime();
+        if (!curtime.hasValue())
+            return;
 
+        // Перезапускаем деактивированные частицы
         for (std::uint16_t i = 0; i < state.particleCount; ++i) {
             auto& particle = state.particles[i];
-            if (!particle.active || particle.opacity <= 0.0f) {
-                particle.origin = origin;
-                particle.spawnTime = hookContext.globalVars().curtime().valueOr(0.0f);
-                particle.maxLife = 2.0f;
+            if (!particle.active) {
+                // Случайная позиция в радиусе вокруг игрока
+                const float randomX = playerOrigin.x + (static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f) * spawnRadius;
+                const float randomY = playerOrigin.y + (static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f) * spawnRadius;
+                const float spawnZ = playerOrigin.z + skyHeight;
+
+                particle.origin = cs2::Vector{randomX, randomY, spawnZ};
+                particle.currentPos = particle.origin;
+                particle.spawnTime = curtime.value();
                 particle.active = true;
                 if (!particle.panelHandle.isValid())
                     createParticlePanel(particle);
-                return;
+                return; // Спавним по одной за вызов
             }
         }
 
+        // Создаём новые слоты пока не достигнем targetCount
         if (state.particleCount < targetCount) {
             auto& particle = state.particles[state.particleCount];
-            particle.origin = origin;
-            particle.spawnTime = hookContext.globalVars().curtime().valueOr(0.0f);
-            particle.maxLife = 2.0f;
+            const float randomX = playerOrigin.x + (static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f) * spawnRadius;
+            const float randomY = playerOrigin.y + (static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f) * spawnRadius;
+            const float spawnZ = playerOrigin.z + skyHeight;
+
+            particle.origin = cs2::Vector{randomX, randomY, spawnZ};
+            particle.currentPos = particle.origin;
+            particle.spawnTime = curtime.value();
             particle.active = true;
             createParticlePanel(particle);
             state.particleCount++;
@@ -209,7 +278,7 @@ private:
 
         auto&& imagePanel = hookContext.panelFactory().createImagePanel(panel);
         const auto particleType = GET_CONFIG_VAR(rain_vars::Type);
-        imagePanel.setImageSvg(getParticleSvgPath(particleType), 64);
+        imagePanel.setImageSvg(getRainParticleSvgPath(particleType), 64);
 
         auto&& uiPanel = imagePanel.uiPanel();
         uiPanel.setAlign(PanelAlignmentParams{cs2::k_EHorizontalAlignmentCenter, cs2::k_EVerticalAlignmentBottom});
@@ -231,51 +300,6 @@ private:
 
         particle.panelHandle = panel.getHandle();
         particle.imagePanelHandle = uiPanel.getHandle();
-    }
-
-    void updateActiveParticles() const
-    {
-        auto& state = getState();
-        const auto curtime = hookContext.globalVars().curtime();
-        if (!curtime.hasValue())
-            return;
-
-        for (std::uint16_t i = 0; i < state.particleCount; ++i) {
-            auto& particle = state.particles[i];
-            if (!particle.active || !particle.panelHandle.isValid())
-                continue;
-
-            const float timeAlive = curtime.value() - particle.spawnTime;
-            const float opacity = RainParticlePanel::getOpacity(timeAlive, particle.maxLife);
-
-            if (opacity <= 0.0f) {
-                particle.active = false;
-                hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle).setVisible(false);
-                continue;
-            }
-
-            const auto clipSpace = hookContext.template make<WorldToClipSpaceConverter>().toClipSpace(particle.origin);
-            if (!clipSpace.onScreen()) {
-                hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle).setVisible(false);
-                continue;
-            }
-
-            auto&& panel = hookContext.template make<PanoramaUiEngine>().getPanelFromHandle(particle.panelHandle);
-
-            const float fovScale = ViewToProjectionMatrix{hookContext}.getFovScale();
-            const float scale = RainParticlePanel::getScale(clipSpace.z, fovScale);
-
-            const auto deviceCoordinates = clipSpace.toNormalizedDeviceCoordinates();
-
-            PanoramaTransformations{
-                hookContext.panoramaTransformFactory().scale(scale),
-                hookContext.panoramaTransformFactory().translate(deviceCoordinates.getX(), deviceCoordinates.getY())
-            }.applyTo(panel);
-
-            panel.setOpacity(opacity);
-            panel.setZIndex(-clipSpace.z);
-            panel.setVisible(true);
-        }
     }
 
     [[nodiscard]] auto& getState() const
