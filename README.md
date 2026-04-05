@@ -12,7 +12,7 @@ All rights belong to the original Osiris developer (https://github.com/danielkru
 ## What's new
 * 4 April 2026
     * Added World Particle
-    * Added Trigger Bot (dont work, need m_iIDEntIndex offset)
+    * Added Trigger Bot (work, but need TraceRay / UTIL_TraceLine pattern)
     
 * 3 April 2026
     * Change Aim Bot setting
