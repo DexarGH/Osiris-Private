@@ -177,10 +177,12 @@ public:
 
     [[nodiscard]] std::optional<std::int32_t> getIdEntityIndex() const noexcept
     {
-        // Fallback на фиксированный оффсет 0x13A8 (или 0x13B0 в некоторых билдах)
-        constexpr std::int32_t kFallbackOffset = 0x13A8;
-        if (playerPawn)
-            return *reinterpret_cast<std::int32_t*>(reinterpret_cast<std::byte*>(playerPawn) + kFallbackOffset);
+        const auto offset = hookContext.patternSearchResults().template get<OffsetToCrosshairId>();
+        if (offset && playerPawn) {
+            auto result = offset.of(playerPawn).toOptional();
+            if (result.hasValue())
+                return result.value();
+        }
         return std::nullopt;
     }
 

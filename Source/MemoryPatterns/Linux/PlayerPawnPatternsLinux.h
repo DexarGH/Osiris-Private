@@ -16,7 +16,6 @@ struct PlayerPawnPatterns {
             .template addPattern<OffsetToFlashBangEndTime, CodePattern{"41 0F 10 ? ? ? ? ? F3 0F 5C 05"}.add(4).read()>()
             .template addPattern<OffsetToPlayerPawnSceneObjectUpdaterHandle, CodePattern{"89 83 ? ? ? ? 48 8B BB ? ? ? ? 48 8B"}.add(2).read()>()
             .template addPattern<OffsetToIsScoped, CodePattern{"BB ? ? ? ? 00 F3 0F 11 45"}.add(1).read()>()
-            // OffsetToCrosshairId disabled — паттерн не найден. Используется fallback 0x13A8 в PlayerPawn
-            ;
+            .template addPattern<OffsetToCrosshairId, CodePattern{"8B 83 ? ? ? ? 83 F8 FF"}.add(2).read()>();
     }
 };

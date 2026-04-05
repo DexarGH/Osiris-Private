@@ -1,13 +1,17 @@
 #pragma once
 
+#include <cmath>
 #include <cstdint>
+#include <limits>
 #include <random>
 
 #include <Features/Aimbot/AimbotActivationKeys.h>
 #include <GameClient/Entities/PlayerPawn.h>
 #include <GameClient/EntitySystem/EntitySystem.h>
+#include <GameClient/WorldToScreen/WorldToClipSpaceConverter.h>
 #include <SDL/SdlDll.h>
 #include <Utils/Lvalue.h>
+#include <Utils/Logger.h>
 #include "TriggerBotConfigVariables.h"
 #include "TriggerBotState.h"
 
@@ -31,34 +35,77 @@ public:
         if (!localPawn)
             return;
 
-        const auto crosshairEntityHandle = localPawn.getIdEntityIndex();
-        if (!crosshairEntityHandle.has_value() || crosshairEntityHandle.value() == -1)
+        WorldToClipSpaceConverter<HookContext> worldToClipSpaceConverter{hookContext};
+        
+        // Флаг, что мы нашли врага на мушке
+        bool enemyFound = false;
+
+        hookContext.template make<EntitySystem>().forEachNetworkableEntityIdentity([&](const cs2::CEntityIdentity& entityIdentity) {
+            const auto entityTypeInfo = hookContext.entityClassifier().classifyEntity(entityIdentity.entityClass);
+            if (!entityTypeInfo.template is<cs2::C_CSPlayerPawn>())
+                return;
+
+            auto&& playerPawn = hookContext.template make<BaseEntity>(static_cast<cs2::C_BaseEntity*>(entityIdentity.entity)).template as<PlayerPawn>();
+            if (!playerPawn)
+                return;
+
+            if (!playerPawn.isAlive().value_or(false))
+                return;
+
+            if (!playerPawn.isEnemy().value_or(false))
+                return;
+
+            if (playerPawn.isControlledByLocalPlayer())
+                return;
+
+            const auto targetOrigin = playerPawn.absOrigin();
+            if (!targetOrigin.hasValue())
+                return;
+
+            // Проверяем 3 высоты (ноги, грудь, голова), чтобы попасть в хитбокс тела
+            auto targetPos = targetOrigin.value();
+            const float checkHeights[] = {25.0f, 45.0f, 65.0f};
+
+            for (float heightOffset : checkHeights) {
+                targetPos.z = targetOrigin.value().z + heightOffset;
+
+                const auto clip = worldToClipSpaceConverter.toClipSpace(targetPos);
+                if (!clip.onScreen() || clip.z < 0.0f)
+                    continue;
+
+                // NDC координаты (-1.0 до 1.0)
+                const float inverseW = clip.w > 0.0001f ? 1.0f / clip.w : 0.0f;
+                const float ndcX = clip.x * inverseW;
+                const float ndcY = clip.y * inverseW;
+                
+                // Квадрат расстояния до центра экрана
+                const float screenDist = ndcX * ndcX + ndcY * ndcY;
+
+                // Порог: стреляем только если прицел точно на модели, а не рядом
+                constexpr float triggerThreshold = 0.0015f;
+                
+                if (screenDist < triggerThreshold) {
+                    enemyFound = true;
+                    return; // Нашли врага — выходим из лямбды
+                }
+            }
+        });
+
+        if (!enemyFound)
             return;
 
-        auto&& baseEntity = hookContext.template make<EntitySystem>().getEntityFromHandle2(cs2::CEntityHandle{static_cast<std::uint32_t>(crosshairEntityHandle.value())});
-        if (!baseEntity)
-            return;
-
-        auto&& playerPawn = baseEntity.template as<PlayerPawn>();
-        if (!playerPawn)
-            return;
-
-        if (!playerPawn.isAlive().value_or(false))
-            return;
-
-        if (!playerPawn.isEnemy().value_or(false))
-            return;
-
-        if (playerPawn.isControlledByLocalPlayer())
-            return;
-
-        if (GET_CONFIG_VAR(trigger_bot::HeadOnly)) {
-            // TODO: Requires bone checks — пока заглушка, всегда true
-            static_cast<void>(true);
+        // Кулдаун (0.1 сек) для автоматической стрельбы
+        const auto curtime = hookContext.globalVars().curtime();
+        if (curtime.hasValue()) {
+            if (curtime.value() - state().lastShotTime < 0.1f)
+                return;
         }
 
-        // Выполняем клик с рандомной задержкой
+        LOG("[TriggerBot] FIRING!");
         simulateAttackWithDelay();
+        
+        if (curtime.hasValue())
+            state().lastShotTime = curtime.value();
     }
 
     void onUnload() const noexcept
@@ -94,10 +141,7 @@ private:
         const auto maxDelay = GET_CONFIG_VAR(trigger_bot::MaxDelay);
         const auto delay = minDelay + (std::rand() % (maxDelay - minDelay + 1));
 
-        // Мгновенный клик (задержка будет реализована через таймер)
         hookContext.input().simulateAttack();
-
-        // TODO: Реализовать задержку через таймер
         static_cast<void>(delay);
     }
 
